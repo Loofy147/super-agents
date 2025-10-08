@@ -1,10 +1,10 @@
 import random
 from typing import Dict, Any
 
-from ...core.base_adversarial_variant import AdversarialVariant
+from ...core.base_variant import AgentVariant
 from ..registry import register
 
-class AmbiguityInjectorVariant(AdversarialVariant):
+class AmbiguityInjectorVariant(AgentVariant):
     """
     An adversarial agent that generates intentionally ambiguous or difficult
     task descriptions to test the robustness of other agents.

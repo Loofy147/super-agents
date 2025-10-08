@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "meta-orchestrator"
-version = "2.3.0" # Version bump for new features
+version = "3.0.0" # Final major version bump
 authors = [
     {name = "Jules", email = "jules@example.com"},
 ]
@@ -22,7 +22,8 @@ dependencies = [
     "openai",
     "streamlit",
     "scikit-optimize",
-    "dowhy", # Add new dependency for Causal Analysis
+    "dowhy",
+    "ray", # Add new dependency for distributed execution
 ]
 
 [project.urls]

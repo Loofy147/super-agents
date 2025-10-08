@@ -1,0 +1,53 @@
+orchestrator:
+  type: standard
+  standard_settings:
+    experiments:
+    - name: Full Agent Benchmark
+      enabled: true
+      variants:
+      - in_memory_probe
+      - slower_reliable_probe
+      - caching_agent
+      - collaborative_agent_team
+      trials_per_variant: 10
+    - name: Causal Analysis Data Generation
+      enabled: true
+      variants:
+      - caching_agent
+      trials_per_variant: 20
+  mab_settings:
+    strategy: thompson_sampling
+    total_trials: 100
+    variants:
+    - in_memory_probe
+    - slower_reliable_probe
+    - caching_agent
+  tuning_settings:
+    variant: tunable_caching_agent
+    total_configs: 10
+    trials_per_config: 5
+    parameter_space:
+      cache_size:
+        type: int
+        range:
+        - 10
+        - 100
+      strategy:
+        type: categorical
+        choices:
+        - LRU
+        - FIFO
+  adversarial_settings:
+    adversary_variant: adversarial_ambiguity_injector
+    target_variants:
+    - caching_agent
+    - collaborative_agent_team
+    trials_per_target: 5
+results_dir: meta_orchestrator/results
+execution_backend:
+  type: local
+scoring_weights:
+  autonomy: 0.4
+  success: 0.35
+  cost: -0.15
+  latency: -0.1

@@ -1,0 +1,272 @@
+[
+  {
+    "success": 0,
+    "cost": 0.01,
+    "autonomy": 0.1,
+    "variant": "stochastic_agent",
+    "trace_id": "19d1b40e-7185-4dbd-a08b-90a765c3afd2",
+    "timestamp": 1759932252.5227582,
+    "latency_internal_s": 8.904999958758708e-06
+  },
+  {
+    "success": 0,
+    "cost": 0.01,
+    "autonomy": 0.1,
+    "variant": "stochastic_agent",
+    "trace_id": "fa37cffd-48d1-42a6-adbe-64b5941f9784",
+    "timestamp": 1759932252.5227766,
+    "latency_internal_s": 1.8840000848285854e-06
+  },
+  {
+    "success": 0,
+    "cost": 0.01,
+    "autonomy": 0.1,
+    "variant": "stochastic_agent",
+    "trace_id": "04acd5e7-02dc-4068-a58d-f41ec2daf5aa",
+    "timestamp": 1759932252.522789,
+    "latency_internal_s": 1.1140000424347818e-06
+  },
+  {
+    "success": 0,
+    "cost": 0.01,
+    "autonomy": 0.1,
+    "variant": "stochastic_agent",
+    "trace_id": "52891465-0f07-411c-a6ef-36d9216ec785",
+    "timestamp": 1759932252.5227988,
+    "latency_internal_s": 8.440001693088561e-07
+  },
+  {
+    "success": 1,
+    "cost": 0.002,
+    "autonomy": 0.9,
+    "variant": "stochastic_agent",
+    "trace_id": "f473381e-7acf-4492-8b57-8c77a7d2c0e5",
+    "timestamp": 1759932252.522808,
+    "latency_internal_s": 1.0399999155197293e-06
+  },
+  {
+    "success": 1,
+    "cost": 0.002,
+    "autonomy": 0.9,
+    "variant": "stochastic_agent",
+    "trace_id": "595d5beb-3cea-43d8-bf05-0da271add1d4",
+    "timestamp": 1759932252.5228164,
+    "latency_internal_s": 7.870003173593432e-07
+  },
+  {
+    "success": 0,
+    "cost": 0.01,
+    "autonomy": 0.1,
+    "variant": "stochastic_agent",
+    "trace_id": "83852c4c-2143-4c5a-899d-b91d4ccc5bef",
+    "timestamp": 1759932252.5228822,
+    "latency_internal_s": 2.07799985219026e-06
+  },
+  {
+    "success": 1,
+    "cost": 0.002,
+    "autonomy": 0.9,
+    "variant": "stochastic_agent",
+    "trace_id": "32088112-52e2-4ab7-a81f-ca03b0d41a0b",
+    "timestamp": 1759932252.5228941,
+    "latency_internal_s": 9.949999366654083e-07
+  },
+  {
+    "success": 1,
+    "cost": 0.002,
+    "autonomy": 0.9,
+    "variant": "stochastic_agent",
+    "trace_id": "13210fe9-5ca8-46ac-b037-0c8ff2b160a4",
+    "timestamp": 1759932252.5229034,
+    "latency_internal_s": 8.150000212481245e-07
+  },
+  {
+    "success": 1,
+    "cost": 0.002,
+    "autonomy": 0.9,
+    "variant": "stochastic_agent",
+    "trace_id": "eb2df866-b4af-4316-bcf7-f5fe04909489",
+    "timestamp": 1759932252.5229125,
+    "latency_internal_s": 7.129992809495889e-07
+  },
+  {
+    "success": 1,
+    "cost": 0.002,
+    "autonomy": 0.9,
+    "variant": "stochastic_agent",
+    "trace_id": "f49e3a58-5dd7-44d1-a8d9-f225c94d5a05",
+    "timestamp": 1759932252.5229213,
+    "latency_internal_s": 7.119997462723404e-07
+  },
+  {
+    "success": 1,
+    "cost": 0.002,
+    "autonomy": 0.9,
+    "variant": "stochastic_agent",
+    "trace_id": "7bf55512-7744-481f-91e0-8ddd989a415a",
+    "timestamp": 1759932252.5229297,
+    "latency_internal_s": 7.64999640523456e-07
+  },
+  {
+    "success": 1,
+    "cost": 0.002,
+    "autonomy": 0.9,
+    "variant": "stochastic_agent",
+    "trace_id": "38e568e8-c6bc-4253-9248-e046c413dac4",
+    "timestamp": 1759932252.522938,
+    "latency_internal_s": 6.689997462672181e-07
+  },
+  {
+    "success": 1,
+    "cost": 0.002,
+    "autonomy": 0.9,
+    "variant": "stochastic_agent",
+    "trace_id": "4d74fdbb-7f36-4ea9-835c-1e5709d54d1f",
+    "timestamp": 1759932252.5229464,
+    "latency_internal_s": 6.549998943228275e-07
+  },
+  {
+    "success": 1,
+    "cost": 0.002,
+    "autonomy": 0.9,
+    "variant": "stochastic_agent",
+    "trace_id": "3010b5b7-c903-4b4d-93ca-81baec43595a",
+    "timestamp": 1759932252.5229547,
+    "latency_internal_s": 6.599993866984732e-07
+  },
+  {
+    "success": 0,
+    "cost": 0.01,
+    "autonomy": 0.1,
+    "variant": "stochastic_agent",
+    "trace_id": "959c3b4b-0175-44f1-9903-bfcdb33d03a2",
+    "timestamp": 1759932252.522963,
+    "latency_internal_s": 7.069993444019929e-07
+  },
+  {
+    "success": 1,
+    "cost": 0.002,
+    "autonomy": 0.9,
+    "variant": "stochastic_agent",
+    "trace_id": "d1b64f9b-6aa2-4934-a7c1-4b3593f3401f",
+    "timestamp": 1759932252.5229712,
+    "latency_internal_s": 6.620002750423737e-07
+  },
+  {
+    "success": 0,
+    "cost": 0.01,
+    "autonomy": 0.1,
+    "variant": "stochastic_agent",
+    "trace_id": "601f0a99-8a56-4f74-8c22-45e3555e2ec3",
+    "timestamp": 1759932252.5229793,
+    "latency_internal_s": 6.869995559100062e-07
+  },
+  {
+    "success": 1,
+    "cost": 0.002,
+    "autonomy": 0.9,
+    "variant": "stochastic_agent",
+    "trace_id": "d092564f-db9b-478a-93e1-672d7fae70df",
+    "timestamp": 1759932252.5229878,
+    "latency_internal_s": 6.640002538915724e-07
+  },
+  {
+    "success": 1,
+    "cost": 0.002,
+    "autonomy": 0.9,
+    "variant": "stochastic_agent",
+    "trace_id": "5c9aeee2-0a54-41cb-8465-1e1f699999c4",
+    "timestamp": 1759932252.522996,
+    "latency_internal_s": 7.019998520263471e-07
+  },
+  {
+    "success": 1,
+    "cost": 0.002,
+    "autonomy": 0.9,
+    "variant": "stochastic_agent",
+    "trace_id": "dcc75b84-fb06-43f8-93e4-281396764da4",
+    "timestamp": 1759932252.523004,
+    "latency_internal_s": 6.870004654047079e-07
+  },
+  {
+    "success": 1,
+    "cost": 0.002,
+    "autonomy": 0.9,
+    "variant": "stochastic_agent",
+    "trace_id": "800b700d-33f6-4794-8893-a83ec39557e3",
+    "timestamp": 1759932252.5230126,
+    "latency_internal_s": 6.960008249734528e-07
+  },
+  {
+    "success": 1,
+    "cost": 0.002,
+    "autonomy": 0.9,
+    "variant": "stochastic_agent",
+    "trace_id": "d0997cc9-cdc5-4c06-98a0-e39817359b54",
+    "timestamp": 1759932252.523021,
+    "latency_internal_s": 6.939999366295524e-07
+  },
+  {
+    "success": 1,
+    "cost": 0.002,
+    "autonomy": 0.9,
+    "variant": "stochastic_agent",
+    "trace_id": "4cfc3b72-c9c8-4ddf-8c0e-eaac06bee1a6",
+    "timestamp": 1759932252.5230293,
+    "latency_internal_s": 6.559994290000759e-07
+  },
+  {
+    "success": 0,
+    "cost": 0.01,
+    "autonomy": 0.1,
+    "variant": "stochastic_agent",
+    "trace_id": "4516f2e9-4a8c-438a-8b97-9547d2b4a408",
+    "timestamp": 1759932252.5230887,
+    "latency_internal_s": 6.870004654047079e-07
+  },
+  {
+    "success": 0,
+    "cost": 0.01,
+    "autonomy": 0.1,
+    "variant": "stochastic_agent",
+    "trace_id": "9967f1e0-9ef8-4bf5-9b2a-eafc79c1e552",
+    "timestamp": 1759932252.5231426,
+    "latency_internal_s": 2.1890000425628386e-06
+  },
+  {
+    "success": 1,
+    "cost": 0.002,
+    "autonomy": 0.9,
+    "variant": "stochastic_agent",
+    "trace_id": "046e14eb-d88d-405c-b4c7-d7aa114ce356",
+    "timestamp": 1759932252.5231562,
+    "latency_internal_s": 1.2130003597121686e-06
+  },
+  {
+    "success": 1,
+    "cost": 0.002,
+    "autonomy": 0.9,
+    "variant": "stochastic_agent",
+    "trace_id": "16c625c4-5104-46b0-a507-492986ece447",
+    "timestamp": 1759932252.5231657,
+    "latency_internal_s": 8.619999789516442e-07
+  },
+  {
+    "success": 0,
+    "cost": 0.01,
+    "autonomy": 0.1,
+    "variant": "stochastic_agent",
+    "trace_id": "3be9b3a3-a98b-4abf-b3a4-71923ce3f097",
+    "timestamp": 1759932252.5231743,
+    "latency_internal_s": 7.70999577071052e-07
+  },
+  {
+    "success": 0,
+    "cost": 0.01,
+    "autonomy": 0.1,
+    "variant": "stochastic_agent",
+    "trace_id": "b6eb9579-585a-48d5-8638-5821639c210b",
+    "timestamp": 1759932252.5231829,
+    "latency_internal_s": 7.260005077114329e-07
+  }
+]

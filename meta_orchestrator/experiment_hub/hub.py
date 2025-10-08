@@ -6,17 +6,20 @@ import pandas as pd
 from datetime import datetime
 from typing import Dict, Any, List
 
-# Import the centralized registry and orchestrators
+# Conditionally import ray
+try:
+    import ray
+except ImportError:
+    ray = None
+
 from .registry import REGISTRY
 from ..core.interpreter import Interpreter
 from .scoring import analyze_results, generate_markdown_report
-from ..orchestrators.mab_orchestrator import StandardOrchestrator, MultiArmedBanditOrchestrator, BayesianOptOrchestrator
-from .execution import run_trial
+from ..orchestrators.unified_orchestrator import UnifiedOrchestrator
+from .execution import run_trial, configure_execution_backend
 
-# This import triggers the __init__.py in the variants package,
-# which discovers and registers all variants.
+# This import triggers the __init__.py in the variants package
 import meta_orchestrator.experiment_hub.variants
-
 
 def load_config(config_path: str) -> Dict:
     """Loads the experiment configuration from a YAML file."""
@@ -24,99 +27,55 @@ def load_config(config_path: str) -> Dict:
     with open(config_path, "r") as f:
         return yaml.safe_load(f)
 
-
 def run_experiment_suite(config: Dict):
     """
-    Selects an orchestrator and runs the experiment suite.
+    Initializes the execution backend and runs the full experiment suite
+    using the UnifiedOrchestrator.
     """
-    print(f"Registered variants: {list(REGISTRY.keys())}")
+    backend_config = config.get("execution_backend", {})
+    backend_type = backend_config.get("type", "local")
 
-    orchestrator_config = config.get('orchestrator', {})
-    orchestrator_type = orchestrator_config.get('type', 'standard')
-    all_results = []
-    interpreter_instance = Interpreter()
-    context = {"interpreter": interpreter_instance} # General context
+    if backend_type == "ray":
+        if not ray:
+            raise ImportError("Configuration specifies Ray backend, but 'ray' is not installed.")
+        print("Initializing Ray for distributed execution...")
+        ray.init(**backend_config.get("ray_settings", {}))
 
-    if orchestrator_type == 'mab':
-        settings = orchestrator_config.get('mab_settings', {})
-        orchestrator = MultiArmedBanditOrchestrator(strategy=settings.get('strategy'), epsilon=settings.get('epsilon'))
-        variants = settings.get('variants', [])
-        print(f"\n--- Running MAB Orchestrator with variants: {variants} ---")
-        all_results = list(orchestrator.run(variants, settings, context))
+    try:
+        configure_execution_backend(backend_type)
+        print(f"Registered variants: {list(REGISTRY.keys())}")
 
-    elif orchestrator_type == 'standard':
-        orchestrator = StandardOrchestrator()
-        experiments = orchestrator_config.get('standard_settings', {}).get('experiments', [])
-        for experiment in experiments:
-            if not experiment.get("enabled", False): continue
-            print(f"\n--- Running Standard Experiment: {experiment['name']} ---")
-            variants = experiment["variants"]
-            exp_context = context.copy()
-            if any("caching" in v for v in variants):
-                exp_context["task_id"] = f"repeated_task_{uuid.uuid4()}"
-            all_results.extend(list(orchestrator.run(variants, experiment, exp_context)))
+        interpreter_instance = Interpreter()
+        base_context = {"interpreter": interpreter_instance}
 
-    elif orchestrator_type == 'bayesian_optimization':
-        orchestrator = BayesianOptOrchestrator()
-        settings = orchestrator_config.get('tuning_settings', {})
-        variants = [settings.get('variant')]
-        print(f"\n--- Running Bayesian Optimization for: {variants[0]} ---")
-        context["task_id"] = f"hpo_task_{uuid.uuid4()}"
-        all_results = list(orchestrator.run(variants, settings, context))
+        # Instantiate the single, powerful orchestrator
+        orchestrator = UnifiedOrchestrator(config, base_context)
 
-    elif orchestrator_type == 'adversarial_benchmark':
-        settings = orchestrator_config.get('adversarial_settings', {})
-        adversary_variant = settings.get('adversary_variant')
-        target_variants = settings.get('target_variants')
-        trials_per_target = settings.get('trials_per_target', 10)
+        # Delegate the entire run and collect results
+        all_results = list(orchestrator.run_suite())
 
-        if not adversary_variant or not target_variants:
-            raise ValueError("Adversarial benchmark requires 'adversary_variant' and 'target_variants' to be set.")
+        # --- Save, and Analyze ---
+        if all_results:
+            run_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            scoring_weights = config.get("scoring_weights", {})
+            analysis_summary = analyze_results(all_results, scoring_weights)
+            results_df = pd.DataFrame(all_results)
 
-        print(f"\n--- Running Adversarial Benchmark ---")
-        print(f"Adversary: '{adversary_variant}', Targets: {target_variants}")
+            save_results(all_results, analysis_summary, config, run_timestamp, results_df)
 
-        # Run the adversary to generate a poisoned context for each trial
-        for i in range(trials_per_target):
-            print(f"\n--- Adversarial Trial {i+1}/{trials_per_target} ---")
-            adversarial_context = run_trial(adversary_variant, context)
+            print("\n--- Combined Experiment Analysis Summary ---")
+            print(json.dumps(analysis_summary, indent=2))
 
-            # Now run all target agents against this single poisoned context
-            for target_variant in target_variants:
-                print(f"  - Testing '{target_variant}' against poisoned context...")
-                try:
-                    # We add metadata about the adversarial run to the result
-                    target_result = run_trial(target_variant, adversarial_context)
-                    target_result['adversary'] = adversary_variant
-                    target_result['adversarial_strategy'] = adversarial_context.get('adversarial_strategy')
-                    all_results.append(target_result)
-                except Exception as e:
-                    print(f"    ERROR running target {target_variant}: {e}")
+            markdown_report = generate_markdown_report(analysis_summary, config, run_timestamp, results_df)
+            print("\n--- Markdown Summary ---")
+            print(markdown_report)
+        else:
+            print("\nNo results to analyze.")
 
-    else:
-        raise ValueError(f"Unknown orchestrator type: {orchestrator_type}")
-
-    # --- Save, and Analyze ---
-    if all_results:
-        run_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        scoring_weights = config.get("scoring_weights", {})
-
-        analysis_summary = analyze_results(all_results, scoring_weights)
-
-        # Convert results to a DataFrame for causal analysis and reporting
-        results_df = pd.DataFrame(all_results)
-
-        save_results(all_results, analysis_summary, config, run_timestamp, results_df)
-
-        print("\n--- Combined Experiment Analysis Summary ---")
-        print(json.dumps(analysis_summary, indent=2))
-
-        markdown_report = generate_markdown_report(analysis_summary, config, run_timestamp, results_df)
-        print("\n--- Markdown Summary ---")
-        print(markdown_report)
-    else:
-        print("\nNo results to analyze.")
-
+    finally:
+        if backend_type == "ray" and ray.is_initialized():
+            print("Shutting down Ray...")
+            ray.shutdown()
 
 def save_results(results: List[Dict], analysis: Dict, config: Dict, run_timestamp: str, results_df: pd.DataFrame):
     """

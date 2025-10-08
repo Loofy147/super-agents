@@ -6,3 +6,4 @@ openai
 streamlit
 scikit-optimize
 dowhy
+ray
