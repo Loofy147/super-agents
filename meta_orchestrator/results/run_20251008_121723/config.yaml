@@ -1,0 +1,17 @@
+orchestrator:
+  type: standard
+  standard_settings:
+    experiments:
+    - name: Collaboration vs. Caching Benchmark
+      enabled: true
+      variants:
+      - slower_reliable_probe
+      - caching_agent
+      - collaborative_agent_team
+      trials_per_variant: 50
+results_dir: meta_orchestrator/results
+scoring_weights:
+  autonomy: 0.4
+  success: 0.35
+  cost: -0.15
+  latency: -0.1

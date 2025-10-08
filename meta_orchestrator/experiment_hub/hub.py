@@ -1,6 +1,7 @@
 import json
 import yaml
 import os
+import uuid
 from datetime import datetime
 from typing import Dict, Any, List
 
@@ -124,6 +125,5 @@ def save_results(results: List[Dict], analysis: Dict, config: Dict, run_timestam
         print(f"Error saving run configuration: {e}")
 
 if __name__ == "__main__":
-    import uuid # Add missing import for standalone execution
     config = load_config("config.yaml")
     run_experiment_suite(config)
