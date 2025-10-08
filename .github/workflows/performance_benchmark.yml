@@ -1,0 +1,40 @@
+# .github/workflows/performance_benchmark.yml
+name: Agent Performance Benchmark
+
+on:
+  pull_request:
+    paths:
+      - 'meta_orchestrator/experiment_hub/variants/**'
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10' # Or your project's target version
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run performance benchmark
+        id: benchmark_run
+        run: |
+          # Run the experiment using the dedicated benchmark config
+          python3 -m meta_orchestrator.cli run -c benchmark_config.yaml
+
+      # The next steps would be to parse the results and post a comment,
+      # but this provides the core execution of the benchmark.
+      - name: Placeholder for PR Commenting
+        run: |
+          echo "Benchmark complete. In a future step, we would post the contents of the latest summary.md to the PR."
+          # Example: find the latest run directory and display the summary
+          LATEST_RUN=$(ls -td meta_orchestrator/results/run_* | head -1)
+          echo "Results are in: $LATEST_RUN"
+          cat "$LATEST_RUN/summary.md"

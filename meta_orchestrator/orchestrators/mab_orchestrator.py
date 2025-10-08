@@ -1,26 +1,26 @@
 import random
 import numpy as np
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Generator
 
-from ..experiment_hub.execution import run_trial  # <-- Import from new location
+from ..experiment_hub.execution import run_trial
 from ..experiment_hub.scoring import calculate_score
 
 
 class BaseOrchestrator(ABC):
     """Abstract base class for all orchestrators."""
     @abstractmethod
-    def run(self, variants: List[str], config: Dict[str, Any], context: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def run(self, variants: List[str], config: Dict[str, Any], context: Dict[str, Any]) -> Generator[Dict[str, Any], None, None]:
         """
-        Run an experiment using a specific orchestration strategy.
+        Run an experiment, yielding results for each trial as they complete.
 
         Args:
             variants: A list of variant names to test.
             config: A dictionary containing the experiment configuration.
             context: A dictionary for passing stateful objects like interpreters.
 
-        Returns:
-            A list of result dictionaries for all trials.
+        Yields:
+            A dictionary with the trial results for each completed trial.
         """
         pass
 
@@ -29,18 +29,16 @@ class StandardOrchestrator(BaseOrchestrator):
     """
     The default orchestrator that runs a fixed number of trials for each variant.
     """
-    def run(self, variants: List[str], config: Dict[str, Any], context: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def run(self, variants: List[str], config: Dict[str, Any], context: Dict[str, Any]) -> Generator[Dict[str, Any], None, None]:
         trials_per_variant = config['trials_per_variant']
-        results = []
         print(f"Running {trials_per_variant} trials for each of {variants}")
         for _ in range(trials_per_variant):
             for v_name in variants:
                 try:
                     trial_result = run_trial(v_name, context)
-                    results.append(trial_result)
+                    yield trial_result
                 except Exception as e:
                     print(f"ERROR running trial for variant {v_name}: {e}")
-        return results
 
 
 class MultiArmedBanditOrchestrator(BaseOrchestrator):
@@ -55,13 +53,12 @@ class MultiArmedBanditOrchestrator(BaseOrchestrator):
         self.epsilon = epsilon
         print(f"Initialized Multi-Armed Bandit Orchestrator with strategy: {self.strategy}")
 
-    def run(self, variants: List[str], config: Dict[str, Any], context: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def run(self, variants: List[str], config: Dict[str, Any], context: Dict[str, Any]) -> Generator[Dict[str, Any], None, None]:
         """
-        Runs an experiment using the configured MAB strategy.
+        Runs an experiment using the configured MAB strategy, yielding results.
         """
         total_trials = config.get('total_trials', 100)
         scoring_weights = config.get('scoring_weights')
-        results = []
 
         if self.strategy == "epsilon_greedy":
             performance = {v: {"score_sum": 0, "runs": 0} for v in variants}
@@ -73,21 +70,19 @@ class MultiArmedBanditOrchestrator(BaseOrchestrator):
         for i in range(total_trials):
             chosen_variant = self._select_variant(variants, performance)
 
-            # For caching agents, we need to ensure a consistent task_id across runs
             if "caching" in chosen_variant:
                 context['task_id'] = 'mab_repeated_task'
 
             trial_result = run_trial(chosen_variant, context)
             score = calculate_score(trial_result, scoring_weights)
             trial_result['score'] = score
-            results.append(trial_result)
 
             self._update_performance(chosen_variant, score, performance)
 
             if (i+1) % 20 == 0:
                 print(f"  ... completed trial {i+1}/{total_trials}")
 
-        return results
+            yield trial_result
 
     def _select_variant(self, variants: List[str], performance: Dict) -> str:
         if self.strategy == "epsilon_greedy":
@@ -124,4 +119,4 @@ class MultiArmedBanditOrchestrator(BaseOrchestrator):
 
             performance[variant]['mu'] = mu_new
             performance[variant]['lambda'] = lambda_new
-            performance[variant]['tau'] = alpha_new / beta_new # This is the precision now
+            performance[variant]['tau'] = alpha_new / beta_new

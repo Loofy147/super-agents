@@ -9,7 +9,7 @@ from .registry import REGISTRY
 from ..core.interpreter import Interpreter
 from .scoring import analyze_results, generate_markdown_report
 from ..orchestrators.mab_orchestrator import StandardOrchestrator, MultiArmedBanditOrchestrator
-from .execution import run_trial # <-- Import from new location
+from .execution import run_trial
 
 # This import triggers the __init__.py in the variants package,
 # which discovers and registers all variants.
@@ -41,11 +41,11 @@ def run_experiment_suite(config: Dict):
             epsilon=mab_settings.get('epsilon', 0.1)
         )
         variants = mab_settings.get('variants', [])
-        # Provide the interpreter to the context for MAB runs if needed
         context = {"interpreter": interpreter_instance}
         exp_config = mab_settings
         print(f"\n--- Running MAB Orchestrator with variants: {variants} ---")
-        all_results = orchestrator.run(variants, exp_config, context)
+        # The orchestrator now returns a generator, so we consume it into a list.
+        all_results = list(orchestrator.run(variants, exp_config, context))
 
     elif orchestrator_type == 'standard':
         orchestrator = StandardOrchestrator()
@@ -63,11 +63,11 @@ def run_experiment_suite(config: Dict):
 
             is_caching_test = any("caching" in v for v in variants)
             if is_caching_test:
-                # For caching tests, we need a consistent task_id and interpreter
                 task_id = f"repeated_task_{uuid.uuid4()}"
                 context = {"interpreter": interpreter_instance, "task_id": task_id}
 
-            all_results.extend(orchestrator.run(variants, exp_config, context))
+            # Consume the generator from the standard orchestrator.
+            all_results.extend(list(orchestrator.run(variants, exp_config, context)))
 
     else:
         raise ValueError(f"Unknown orchestrator type: {orchestrator_type}")
@@ -84,7 +84,6 @@ def run_experiment_suite(config: Dict):
         print("\n--- Combined Experiment Analysis Summary ---")
         print(json.dumps(analysis_summary, indent=2))
 
-        # Also print the markdown report to console for immediate feedback
         markdown_report = generate_markdown_report(analysis_summary, config, run_timestamp)
         print("\n--- Markdown Summary ---")
         print(markdown_report)
@@ -100,7 +99,6 @@ def save_results(results: List[Dict], analysis: Dict, config: Dict, run_timestam
     output_dir = os.path.join(results_dir, f"run_{run_timestamp}")
     os.makedirs(output_dir, exist_ok=True)
 
-    # Save raw results JSON
     results_path = os.path.join(output_dir, "results.json")
     try:
         with open(results_path, "w") as f:
@@ -109,7 +107,6 @@ def save_results(results: List[Dict], analysis: Dict, config: Dict, run_timestam
     except IOError as e:
         print(f"Error saving raw results: {e}")
 
-    # Save summary markdown report
     report_path = os.path.join(output_dir, "summary.md")
     try:
         markdown_report = generate_markdown_report(analysis, config, run_timestamp)
