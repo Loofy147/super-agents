@@ -2,16 +2,19 @@ import streamlit as st
 import pandas as pd
 import os
 import json
+import yaml
 import time
+import subprocess
+import sys
 from datetime import datetime
-from meta_orchestrator.experiment_hub.hub import load_config, run_experiment_suite
-from meta_orchestrator.orchestrators.mab_orchestrator import StandardOrchestrator, MultiArmedBanditOrchestrator
 
 # --- Configuration ---
-RESULTS_DIR = "meta_orchestrator/results"
-CONFIG_PATH = "config.yaml"
+RESULTS_DIR = os.path.join(os.path.dirname(__file__), "..", "results")
+LIVE_RUN_FILE = os.path.join(RESULTS_DIR, "live_run.jsonl")
+TEMP_CONFIG_PATH = os.path.join(RESULTS_DIR, "dashboard_generated_config.yaml")
+
 st.set_page_config(
-    page_title="Meta-Orchestrator Dashboard",
+    page_title="Meta-Orchestrator Command Center",
     page_icon="🤖",
     layout="wide",
 )
@@ -22,136 +25,157 @@ def get_past_runs():
     """Scans the results directory for past experiment runs."""
     if not os.path.exists(RESULTS_DIR):
         return []
-
-    run_dirs = [d for d in os.listdir(RESULTS_DIR) if os.path.isdir(os.path.join(RESULTS_DIR, d)) and d.startswith("run_")]
+    run_dirs = [d for d in os.listdir(RESULTS_DIR) if d.startswith("run_") and os.path.isdir(os.path.join(RESULTS_DIR, d))]
     run_dirs.sort(key=lambda x: datetime.strptime(x, "run_%Y%m%d_%H%M%S"), reverse=True)
     return run_dirs
 
-@st.cache_data
-def load_run_data(run_dir):
-    """Loads the summary and raw results from a specific run directory."""
-    summary_path = os.path.join(RESULTS_DIR, run_dir, "summary.md")
-    results_path = os.path.join(RESULTS_DIR, run_dir, "results.json")
+def run_experiment_in_background(config_path: str):
+    """Launches the CLI experiment runner as a non-blocking background process."""
+    command = [sys.executable, "-m", "meta_orchestrator.cli", "run", "-c", config_path]
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    st.session_state['experiment_process'] = process
+    st.session_state['is_running'] = True
+    # Clear the live run file at the start of a new run
+    if os.path.exists(LIVE_RUN_FILE):
+        os.remove(LIVE_RUN_FILE)
 
-    summary_content = ""
-    if os.path.exists(summary_path):
-        with open(summary_path, 'r') as f:
-            summary_content = f.read()
+def tail_live_results():
+    """A generator that tails the live run file and yields new results."""
+    if not os.path.exists(LIVE_RUN_FILE):
+        return
+    with open(LIVE_RUN_FILE, 'r') as f:
+        while st.session_state.get('is_running', False):
+            line = f.readline()
+            if not line:
+                # If the process has finished, break the loop
+                if st.session_state.experiment_process.poll() is not None:
+                    st.session_state['is_running'] = False
+                    break
+                time.sleep(0.1)
+                continue
+            yield json.loads(line)
 
-    results_df = pd.DataFrame()
-    if os.path.exists(results_path):
-        results_df = pd.read_json(results_path)
+# --- UI Sections ---
+def show_experiment_builder():
+    """UI for building a new experiment configuration."""
+    st.header("🛠️ Experiment Builder")
+    st.write("Design a new experiment using the form below. The generated YAML will be used to launch the run.")
 
-    return summary_content, results_df
+    # Get available variants from the registry
+    from meta_orchestrator.experiment_hub.registry import REGISTRY
+    all_variants = list(REGISTRY.keys())
 
-def run_live_experiment(config):
-    """Runs an experiment and yields data for live updates."""
-    # This is a simplified version of the hub's logic for dashboard use
-    orchestrator_config = config.get('orchestrator', {})
-    orchestrator_type = orchestrator_config.get('type', 'standard')
+    with st.form("experiment_builder"):
+        st.subheader("Orchestrator Settings")
+        orchestrator_type = st.selectbox("Orchestrator Type", ["standard", "mab", "adversarial_benchmark"], index=0)
 
-    if orchestrator_type == 'mab':
-        settings = orchestrator_config.get('mab_settings', {})
-        orchestrator = MultiArmedBanditOrchestrator(strategy=settings.get('strategy'), epsilon=settings.get('epsilon'))
-        variants = settings.get('variants', [])
-        exp_config = settings
-    else: # standard
-        orchestrator = StandardOrchestrator()
-        # For simplicity, we'll just run the first standard experiment defined
-        experiment = orchestrator_config.get('standard_settings', {}).get('experiments', [{}])[0]
-        variants = experiment.get('variants', [])
-        exp_config = experiment
+        config = {"orchestrator": {"type": orchestrator_type}}
 
-    # The orchestrator's run method is a generator
-    return orchestrator.run(variants, exp_config, {})
+        if orchestrator_type == "standard":
+            st.subheader("Standard Experiment")
+            exp_name = st.text_input("Experiment Name", "Dashboard Standard Run")
+            variants = st.multiselect("Select Variants to Test", all_variants, default=all_variants[:2])
+            trials = st.slider("Trials per Variant", 1, 100, 10)
+            config["orchestrator"]["standard_settings"] = {
+                "experiments": [{"name": exp_name, "enabled": True, "variants": variants, "trials_per_variant": trials}]
+            }
 
-# --- Main Application ---
-st.title("🤖 Meta-Orchestrator Dashboard")
+        elif orchestrator_type == "mab":
+            st.subheader("Multi-Armed Bandit Settings")
+            variants = st.multiselect("Select Variants for MAB", all_variants, default=all_variants[:3])
+            total_trials = st.slider("Total MAB Trials", 10, 500, 100)
+            config["orchestrator"]["mab_settings"] = {"variants": variants, "total_trials": total_trials, "strategy": "thompson_sampling"}
 
-# --- Sidebar ---
-st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to", ["Live Experiment", "Past Runs"])
+        elif orchestrator_type == "adversarial_benchmark":
+            st.subheader("Adversarial Benchmark Settings")
+            adversary = st.selectbox("Select Adversary Variant", [v for v in all_variants if "adversarial" in v])
+            targets = st.multiselect("Select Target Variants", [v for v in all_variants if "adversarial" not in v], default=[v for v in all_variants if "adversarial" not in v][:2])
+            trials = st.slider("Adversarial Trials", 1, 50, 10)
+            config["orchestrator"]["adversarial_settings"] = {"adversary_variant": adversary, "target_variants": targets, "trials_per_target": trials}
 
-if page == "Live Experiment":
-    st.header("🚀 Live Experiment Runner")
+        st.subheader("Global Settings")
+        config["scoring_weights"] = {
+            "autonomy": st.slider("Autonomy Weight", -1.0, 1.0, 0.4),
+            "success": st.slider("Success Weight", -1.0, 1.0, 0.35),
+            "cost": st.slider("Cost Weight", -1.0, 1.0, -0.15),
+            "latency": st.slider("Latency Weight", -1.0, 1.0, -0.1),
+        }
 
-    if not os.path.exists(CONFIG_PATH):
-        st.error(f"Configuration file not found at `{CONFIG_PATH}`. Cannot start new experiments.")
-    else:
-        with open(CONFIG_PATH, 'r') as f:
-            st.sidebar.subheader("Current Configuration")
-            st.sidebar.code(f.read(), language="yaml")
+        submitted = st.form_submit_button("Launch Experiment")
+        if submitted:
+            st.session_state['current_config'] = config
+            with open(TEMP_CONFIG_PATH, 'w') as f:
+                yaml.dump(config, f)
+            run_experiment_in_background(TEMP_CONFIG_PATH)
+            st.rerun()
 
-        if st.button("▶️ Start New Experiment Run"):
-            st.info("Starting new experiment... Results will appear below in real-time.")
+def show_live_view():
+    """UI for monitoring a live experiment."""
+    st.header("🚀 Live Experiment Monitor")
+    if not st.session_state.get('is_running', False):
+        st.info("No experiment is currently running. Launch one from the 'Experiment Builder'.")
+        return
 
-            config = load_config(CONFIG_PATH)
-            results = []
+    st.subheader("Live Performance")
+    score_chart_placeholder = st.empty()
+    choice_chart_placeholder = st.empty()
+    results = []
 
-            # Placeholders for the charts
-            score_chart_placeholder = st.empty()
-            choice_chart_placeholder = st.empty()
+    for result in tail_live_results():
+        results.append(result)
+        df = pd.DataFrame(results)
 
-            # Dataframes for live plotting
-            live_scores = pd.DataFrame(columns=['trial', 'variant', 'mean_score'])
-            live_choices = pd.DataFrame(columns=['variant', 'count'])
+        # Update score chart
+        if 'score' in df.columns:
+            mean_scores = df.groupby('variant')['score'].mean().reset_index()
+            score_chart_placeholder.bar_chart(mean_scores.set_index('variant'))
 
-            run_generator = run_live_experiment(config)
+        # Update choice chart for MAB
+        if st.session_state.current_config['orchestrator']['type'] == 'mab':
+            choice_counts = df['variant'].value_counts().reset_index()
+            choice_counts.columns = ['variant', 'count']
+            choice_chart_placeholder.bar_chart(choice_counts.set_index('variant'))
 
-            for i, result in enumerate(run_generator):
-                results.append(result)
+    st.success("Experiment finished!")
+    st.balloons()
+    st.subheader("Final Results")
+    st.dataframe(pd.DataFrame(results))
+    st.session_state['is_running'] = False
+    st.rerun() # Rerun to update the state
 
-                # Update choices count
-                variant_name = result['variant']
-                if variant_name in live_choices['variant'].values:
-                    live_choices.loc[live_choices['variant'] == variant_name, 'count'] += 1
-                else:
-                    new_row = pd.DataFrame([{'variant': variant_name, 'count': 1}])
-                    live_choices = pd.concat([live_choices, new_row], ignore_index=True)
-
-                # Update mean scores
-                current_scores = {v: [] for v in live_choices['variant']}
-                for res in results:
-                    if 'score' in res:
-                        current_scores[res['variant']].append(res['score'])
-
-                mean_scores_data = []
-                for v, s_list in current_scores.items():
-                    if s_list:
-                        mean_scores_data.append({'trial': i+1, 'variant': v, 'mean_score': sum(s_list)/len(s_list)})
-
-                if mean_scores_data:
-                    new_scores_df = pd.DataFrame(mean_scores_data)
-                    score_chart_placeholder.line_chart(new_scores_df, x='trial', y='mean_score', color='variant')
-
-                choice_chart_placeholder.bar_chart(live_choices.set_index('variant'))
-
-                # Give a bit of breathing room for the UI to update
-                time.sleep(0.05)
-
-            st.success("Experiment finished!")
-            st.balloons()
-            st.subheader("Final Results")
-            st.dataframe(pd.DataFrame(results))
-
-
-elif page == "Past Runs":
+def show_past_runs():
+    """UI for browsing past experiment runs."""
     st.header("🗂️ Past Experiment Runs")
     past_runs = get_past_runs()
-
     if not past_runs:
         st.warning("No past experiment runs found.")
-    else:
-        selected_run = st.selectbox("Select a run to view:", past_runs)
-        if selected_run:
-            summary_md, results_df = load_run_data(selected_run)
+        return
 
-            if summary_md:
+    selected_run = st.selectbox("Select a run to view:", past_runs)
+    if selected_run:
+        summary_path = os.path.join(RESULTS_DIR, selected_run, "summary.md")
+        results_path = os.path.join(RESULTS_DIR, selected_run, "results.json")
+
+        if os.path.exists(summary_path):
+            with open(summary_path, 'r') as f:
                 st.subheader("📊 Summary Report")
-                st.markdown(summary_md)
+                st.markdown(f.read())
 
-            if not results_df.empty:
+        if os.path.exists(results_path):
+            with open(results_path, 'r') as f:
                 st.subheader("🔬 Raw Trial Data")
-                st.dataframe(results_df)
-            else:
-                st.warning("No results data found for this run.")
+                st.dataframe(pd.read_json(f))
+        else:
+            st.warning("No raw results data found for this run.")
+
+# --- Main App Router ---
+st.title("🤖 Meta-Orchestrator Command Center")
+st.sidebar.title("Navigation")
+page = st.sidebar.radio("Go to", ["Live View", "Experiment Builder", "Past Runs"])
+
+if page == "Live View":
+    show_live_view()
+elif page == "Experiment Builder":
+    show_experiment_builder()
+elif page == "Past Runs":
+    show_past_runs()

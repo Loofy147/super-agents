@@ -11,6 +11,8 @@ from .code_modernizer.llm_modernizer import LLMModernizer
 from .testing.scaffolder import TestScaffolder
 from .analysis.post_hoc_analyzer import PostHocAnalyzer
 from .analysis.config_generator import ConfigGenerator
+from .agent_forge.designer import AgentDesigner
+from .agent_forge.code_generator import CodeGenerator
 
 def main():
     """
@@ -77,6 +79,12 @@ def main():
         help="Path to the agent variant's Python file."
     )
 
+    # --- 'forge-agent' command ---
+    subparsers.add_parser(
+        "forge-agent",
+        help="Autonomously design and generate a new agent variant."
+    )
+
     args = parser.parse_args()
 
     if args.command == "run":
@@ -138,6 +146,28 @@ def main():
 
         scaffolder = TestScaffolder()
         scaffolder.scaffold(args.filepath)
+
+    elif args.command == "forge-agent":
+        handle_forge_agent()
+
+
+def handle_forge_agent():
+    """Logic for the 'forge-agent' command."""
+    designer = AgentDesigner()
+    code_generator = CodeGenerator()
+
+    # TODO: A more advanced version could get existing variants to avoid name clashes
+    design_spec = designer.design_new_variant()
+
+    # Define the output directory for new variants
+    variants_dir = os.path.join(os.path.dirname(__file__), "experiment_hub", "variants")
+
+    # Generate and write the new agent's code
+    new_agent_path = code_generator.generate_and_write_code(design_spec, variants_dir)
+
+    print(f"\n✅ New agent '{design_spec['name']}' forged successfully!")
+    print(f"   Source code is available at: {new_agent_path}")
+    print("   It is now available to be used in experiments.")
 
 
 def handle_suggest_next_run(run_dir: str):

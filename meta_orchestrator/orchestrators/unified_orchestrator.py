@@ -1,6 +1,8 @@
+import os
+import json
+import uuid
 import random
 import numpy as np
-import uuid
 from typing import List, Dict, Any, Generator, Type
 
 # Conditionally import ray and skopt to keep the core system lightweight
@@ -44,6 +46,29 @@ class UnifiedOrchestrator:
         self.orchestrator_config = self.config.get('orchestrator', {})
         self.backend_config = self.config.get("execution_backend", {})
         self.execution_backend = self.backend_config.get("type", "local")
+
+        # Setup for the real-time results bus
+        results_dir = self.config.get("results_dir", "meta_orchestrator/results")
+        self.live_run_path = os.path.join(results_dir, "live_run.jsonl")
+        # Clear any previous live run file
+        if os.path.exists(self.live_run_path):
+            os.remove(self.live_run_path)
+
+    def _write_to_bus(self, result: Dict[str, Any]):
+        """Writes a single trial result to the live run bus."""
+        if not self.live_run_path:
+            return
+        with open(self.live_run_path, "a") as f:
+            # We need to handle non-serializable numpy types
+            serializable_result = {}
+            for key, value in result.items():
+                if isinstance(value, (np.integer, np.int64)):
+                    serializable_result[key] = int(value)
+                elif isinstance(value, (np.floating, np.float64)):
+                    serializable_result[key] = float(value)
+                else:
+                    serializable_result[key] = value
+            f.write(json.dumps(serializable_result) + "\n")
 
     def run_suite(self) -> Generator[Dict[str, Any], None, None]:
         """
@@ -91,14 +116,18 @@ class UnifiedOrchestrator:
                     ready, pending_trials = ray.wait(pending_trials)
                     for res_id in ready:
                         try:
-                            yield ray.get(res_id)
+                            result = ray.get(res_id)
+                            self._write_to_bus(result)
+                            yield result
                         except Exception as e:
                             print(f"ERROR retrieving result from Ray worker: {e}")
             else:
                 for _ in range(trials_per_variant):
                     for v_name in variants:
                         try:
-                            yield run_trial(v_name, exp_context)
+                            result = run_trial(v_name, exp_context)
+                            self._write_to_bus(result)
+                            yield result
                         except Exception as e:
                             print(f"ERROR running trial for variant {v_name}: {e}")
 
@@ -119,6 +148,7 @@ class UnifiedOrchestrator:
             if "caching" in chosen_variant: context['task_id'] = 'mab_repeated_task'
 
             if self.execution_backend == "ray":
+                if not ray or not run_trial_remote: raise ImportError("Ray backend is configured, but 'ray' is not installed.")
                 trial_result = ray.get(run_trial_remote.remote(chosen_variant, context))
             else:
                 trial_result = run_trial(chosen_variant, context)
@@ -127,6 +157,7 @@ class UnifiedOrchestrator:
             trial_result['score'] = score
             self._update_mab_performance(chosen_variant, score, performance, strategy)
             if (i+1) % 20 == 0: print(f"  ... completed MAB trial {i+1}/{total_trials}")
+            self._write_to_bus(trial_result)
             yield trial_result
 
     def _select_mab_variant(self, variants: List[str], performance: Dict, strategy: str) -> str:
@@ -182,7 +213,14 @@ class UnifiedOrchestrator:
             context = self.base_context.copy()
             context["task_id"] = f"hpo_task_{uuid.uuid4()}"
 
-            trial_results = [run_trial(agent_instance, context) for _ in range(trials_per_config)]
+            if self.execution_backend == "ray":
+                if not ray or not run_trial_remote: raise ImportError("Ray backend is configured, but 'ray' is not installed.")
+                # Note: Ray remote tasks cannot take class instances directly as arguments if the class is not defined on the worker.
+                # A more robust implementation would pass the class name and params dict. For now, we assume local testing of this feature.
+                trial_refs = [run_trial_remote.remote(agent_instance, context) for _ in range(trials_per_config)]
+                trial_results = ray.get(trial_refs)
+            else:
+                trial_results = [run_trial(agent_instance, context) for _ in range(trials_per_config)]
 
             scores = []
             for trial_result in trial_results:
@@ -190,6 +228,7 @@ class UnifiedOrchestrator:
                 trial_result['score'] = score
                 trial_result['params'] = params_dict
                 scores.append(score)
+                self._write_to_bus(trial_result)
                 yield trial_result
 
             optimizer.tell(params_list, -np.mean(scores))
@@ -220,6 +259,7 @@ class UnifiedOrchestrator:
                     target_result = run_trial(target_variant, adversarial_context)
                     target_result['adversary'] = adversary_variant
                     target_result['adversarial_strategy'] = adversarial_context.get('adversarial_strategy')
+                    self._write_to_bus(target_result)
                     yield target_result
                 except Exception as e:
                     print(f"    ERROR running target {target_variant}: {e}")
