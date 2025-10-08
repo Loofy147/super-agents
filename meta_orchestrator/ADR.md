@@ -1,58 +1,92 @@
 # Architecture Decision Record: Meta-Orchestrator
 
-This document records the architectural decisions for the Meta-Orchestrator project, built to fulfill the "Meta-Orchestrator Challenge."
+This document records the architectural decisions for the Meta-Orchestrator project.
 
 ## 1. Modular, Package-Based Structure
 
-**Decision:** The project is structured as a standard Python package (`meta_orchestrator`). This decision was made to leverage Python's native module system for clear organization, dependency management, and extensibility.
-
-**Consequences:**
-*   **Pros:**
-    *   Clear separation of concerns (core logic, experiment hub, simulations, tests).
-    *   Enables relative imports, making the codebase self-contained and portable.
-    *   Simplifies testing, as components can be tested in isolation.
-*   **Cons:**
-    *   Requires careful management of `__init__.py` files and package paths to avoid import errors.
+**Decision:** The project is structured as a standard Python package (`meta_orchestrator`).
+**Consequences:** Clear separation of concerns, enables relative imports, and simplifies testing.
 
 ## 2. Centralized Variant Registry
 
-**Decision:** A centralized, singleton `REGISTRY` object, located in its own `experiment_hub/registry.py` module, is used for discovering and managing agent variants. The `register` decorator is also part of this module.
-
-**Rationale:** An initial implementation where the registry and register function were in `hub.py` led to circular dependencies and module scope errors when variants tried to register themselves. A central, standalone module breaks this cycle and ensures all parts of the application interact with the same registry instance.
-
-**Consequences:**
-*   **Pros:**
-    *   Eliminates circular dependencies.
-    *   Provides a single, reliable source of truth for available variants.
-    *   Makes the system highly extensible: adding a new variant only requires creating a new file in the `variants` directory; no changes to the hub are needed.
-*   **Cons:**
-    *   Slightly increases the number of modules, but the clarity gained outweighs this.
+**Decision:** A centralized, singleton `REGISTRY` object and a `register` decorator are used for discovering and managing agent variants.
+**Rationale:** This design avoids circular dependencies and provides a single source of truth for available variants, making the system highly extensible.
 
 ## 3. Decoupled Simulation and Experimentation
 
-**Decision:** The adaptive allocation algorithms (`epsilon-greedy`, `Thompson Sampling`) are implemented in a separate `simulations` module, distinct from the `experiment_hub`. The simulations run against a mock environment, not the live experiment variants.
-
-**Rationale:** This separation allows for the rapid testing and comparison of allocation algorithms without the overhead (latency, cost) of running the actual agent variants. It provides a clean environment to validate the core logic of the learning strategies.
-
-**Consequences:**
-*   **Pros:**
-    *   Fast and cheap to run allocation algorithm comparisons.
-    *   Decouples the development of learning strategies from the development of agent implementations.
-*   **Cons:**
-    *   Relies on the mock environment accurately reflecting the characteristics of the real variants. The fidelity of the simulation is key.
+**Decision:** The original adaptive allocation algorithms were implemented in a separate `simulations` module against a mock environment.
+**Rationale:** This allowed for rapid, low-cost testing of the core learning strategies. This simulation has now been evolved into the `MultiArmedBanditOrchestrator`.
 
 ## 4. Comprehensive, Multi-Layered Testing Strategy
 
-**Decision:** The project includes three distinct layers of automated tests:
-1.  **Unit Tests (`test_unit.py`):** Verify the correctness of individual functions and classes in isolation (e.g., `calculate_score`, `Interpreter` caching).
-2.  **Contract Tests (`test_contract.py`):** Verify the end-to-end pipeline of the Experiment Hub, ensuring all components interact correctly and their data contracts are met.
-3.  **Chaos Tests (`chaos.sh`):** Verify the system's basic resilience by running the experiment hub under a light CPU load.
+**Decision:** The project includes unit, contract, and chaos tests.
+**Rationale:** This multi-layered approach ensures robustness, catches both granular logic errors and integration issues, and provides a baseline for system stability.
 
-**Rationale:** A multi-layered approach ensures robustness. Unit tests catch granular logic errors, contract tests prevent integration issues, and chaos tests provide a baseline for system stability under stress.
+---
+*The following decisions were made during the v2.0 overhaul.*
+---
+
+## 5. Configuration-Driven Experiments via YAML
+
+**Decision (New):** All experiment parameters, including orchestrator selection, variant lists, trial counts, and scoring weights, have been externalized from the Python code into a single `config.yaml` file.
+
+**Rationale:** The initial implementation had hardcoded experiment setups in `hub.py`. This made it inflexible and required code changes for any adjustments. A YAML-based configuration makes the system far more flexible, allowing users to define complex experiment suites without touching the source code.
 
 **Consequences:**
 *   **Pros:**
-    *   High confidence in the correctness and stability of the codebase.
-    *   Provides a safety net for future refactoring and feature additions.
+    *   Complete separation of configuration from code.
+    *   Users can easily define, enable/disable, and modify experiments.
+    *   Centralizes all tunable parameters in one place.
 *   **Cons:**
-    *   Requires more initial development time to create and maintain the tests.
+    *   Adds a dependency on `PyYAML`.
+    *   Requires careful validation of the configuration file format.
+
+## 6. Formal `AgentVariant` Abstract Base Class
+
+**Decision (New):** An abstract base class, `core.base_variant.AgentVariant`, was introduced to define a formal contract for all agent implementations. All variants now inherit from this class.
+
+**Rationale:** The original implementation relied on an informal contract where variants were simply functions. While simple, this could lead to inconsistencies. The `AgentVariant` ABC ensures all variants have a consistent interface (`run` method) and are callable, making them compatible with the registry while providing a more robust and object-oriented structure.
+
+**Consequences:**
+*   **Pros:**
+    *   Enforces a clear, consistent API for all agents.
+    *   Improves code clarity and maintainability.
+    *   Enables static analysis and better IDE support.
+
+## 7. Pluggable Orchestration Layer
+
+**Decision (New):** The main experiment loop in `hub.py` was refactored into a pluggable orchestration layer. An abstract `BaseOrchestrator` was created, with two initial implementations: `StandardOrchestrator` and `MultiArmedBanditOrchestrator`.
+
+**Rationale:** This refactoring decouples the *what* (the agents) from the *how* (the trial allocation strategy). It elevates the adaptive allocation logic from a simulation to a first-class component of the experiment engine, allowing users to choose the best strategy for their needs via the `config.yaml`.
+
+**Consequences:**
+*   **Pros:**
+    *   Highly flexible; new orchestration strategies can be added easily.
+    *   Promotes separation of concerns.
+    *   Allows for more sophisticated experiment designs (e.g., A/B testing vs. MAB optimization).
+
+## 8. Automated, Human-Readable Reporting
+
+**Decision (New):** In addition to raw `results.json`, each experiment run now automatically generates a `summary.md` file. This file provides a human-readable analysis of the results, including a ranked table of variants.
+
+**Rationale:** Raw JSON is difficult to interpret quickly. The Markdown report makes the results immediately accessible and understandable to a wider audience, including non-developers. Saving each run in a timestamped directory prevents results from being overwritten.
+
+**Consequences:**
+*   **Pros:**
+    *   Greatly improves the usability and actionability of experiment results.
+    *   Provides a persistent, shareable artifact for each run.
+    *   Robustly archives all historical run data.
+
+## 9. Experimental Code Modernizer Feature
+
+**Decision (New):** An experimental `code_modernizer` module was added. It uses Python's `ast` module to analyze the project's own source code and suggest improvements (e.g., use f-strings, add type hints).
+
+**Rationale:** This is a "cutting-edge" feature that aligns with the project's theme of meta-analysis. It provides a built-in tool for maintaining and improving code quality over time, showcasing the potential for the system to reason not just about agents, but about its own implementation.
+
+**Consequences:**
+*   **Pros:**
+    *   Introduces a novel, self-improvement capability.
+    *   Can help enforce coding standards and best practices automatically.
+*   **Cons:**
+    *   Currently based on a simple, rule-based engine.
+    *   Is experimental and not part of the core experiment workflow.

@@ -1,0 +1,46 @@
+# Configuration for Meta-Orchestrator Experiments
+
+# Orchestrator settings
+# Select the orchestration strategy for running experiments.
+# - 'standard': Runs a fixed number of trials for each variant.
+# - 'mab': Uses a Multi-Armed Bandit to dynamically allocate trials.
+orchestrator:
+  type: "standard"  # Can be "standard" or "mab"
+
+  # Settings for the standard orchestrator
+  standard_settings:
+    # This section is used when orchestrator.type is "standard"
+    experiments:
+      - name: "Stateless Probes"
+        enabled: true
+        variants:
+          - "in_memory_probe"
+          - "slower_reliable_probe"
+        trials_per_variant: 20
+
+      - name: "Caching Agent"
+        enabled: true
+        variants:
+          - "caching_agent"
+        trials_per_variant: 5 # Will be run sequentially on the same task to test caching
+
+  # Settings for the Multi-Armed Bandit orchestrator
+  mab_settings:
+    # This section is used when orchestrator.type is "mab"
+    strategy: "thompson_sampling" # "epsilon_greedy" or "thompson_sampling"
+    epsilon: 0.1 # Epsilon value for epsilon-greedy strategy
+    total_trials: 200 # The total number of trials the MAB can run
+    variants: ["in_memory_probe", "slower_reliable_probe", "caching_agent"]
+
+
+# Global settings
+results_dir: "meta_orchestrator/results" # Base directory for saving results
+
+# Scoring weights
+# These weights determine the overall score for an agent variant.
+# Higher is better. Negative values mean that a higher metric is worse.
+scoring_weights:
+  autonomy: 0.4
+  success: 0.35
+  cost: -0.15
+  latency: -0.1
