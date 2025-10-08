@@ -8,8 +8,8 @@ from typing import Dict, Any, List
 from .registry import REGISTRY
 from ..core.interpreter import Interpreter
 from .scoring import analyze_results, generate_markdown_report
-from ..orchestrators.mab_orchestrator import StandardOrchestrator, MultiArmedBanditOrchestrator
-from .execution import run_trial # <-- Import from new location
+from ..orchestrators.mab_orchestrator import StandardOrchestrator, MultiArmedBanditOrchestrator, BayesianOptOrchestrator
+from .execution import run_trial
 
 # This import triggers the __init__.py in the variants package,
 # which discovers and registers all variants.
@@ -33,41 +33,36 @@ def run_experiment_suite(config: Dict):
     orchestrator_type = orchestrator_config.get('type', 'standard')
     all_results = []
     interpreter_instance = Interpreter()
+    context = {"interpreter": interpreter_instance} # General context
 
     if orchestrator_type == 'mab':
-        mab_settings = orchestrator_config.get('mab_settings', {})
-        orchestrator = MultiArmedBanditOrchestrator(
-            strategy=mab_settings.get('strategy', 'thompson_sampling'),
-            epsilon=mab_settings.get('epsilon', 0.1)
-        )
-        variants = mab_settings.get('variants', [])
-        # Provide the interpreter to the context for MAB runs if needed
-        context = {"interpreter": interpreter_instance}
-        exp_config = mab_settings
+        settings = orchestrator_config.get('mab_settings', {})
+        orchestrator = MultiArmedBanditOrchestrator(strategy=settings.get('strategy'), epsilon=settings.get('epsilon'))
+        variants = settings.get('variants', [])
         print(f"\n--- Running MAB Orchestrator with variants: {variants} ---")
-        all_results = orchestrator.run(variants, exp_config, context)
+        all_results = list(orchestrator.run(variants, settings, context))
 
     elif orchestrator_type == 'standard':
         orchestrator = StandardOrchestrator()
         experiments = orchestrator_config.get('standard_settings', {}).get('experiments', [])
-
         for experiment in experiments:
-            if not experiment.get("enabled", False):
-                print(f"\n--- Skipping Experiment: {experiment['name']} (disabled) ---")
-                continue
-
+            if not experiment.get("enabled", False): continue
             print(f"\n--- Running Standard Experiment: {experiment['name']} ---")
             variants = experiment["variants"]
-            exp_config = experiment
-            context = {}
+            exp_context = context.copy()
+            if any("caching" in v for v in variants):
+                exp_context["task_id"] = f"repeated_task_{uuid.uuid4()}"
+            all_results.extend(list(orchestrator.run(variants, experiment, exp_context)))
 
-            is_caching_test = any("caching" in v for v in variants)
-            if is_caching_test:
-                # For caching tests, we need a consistent task_id and interpreter
-                task_id = f"repeated_task_{uuid.uuid4()}"
-                context = {"interpreter": interpreter_instance, "task_id": task_id}
-
-            all_results.extend(orchestrator.run(variants, exp_config, context))
+    elif orchestrator_type == 'bayesian_optimization':
+        orchestrator = BayesianOptOrchestrator()
+        settings = orchestrator_config.get('tuning_settings', {})
+        # The 'variants' for this orchestrator is just the single tunable agent
+        variants = [settings.get('variant')]
+        print(f"\n--- Running Bayesian Optimization for: {variants[0]} ---")
+        # The context needs a consistent task_id for comparing parameter sets
+        context["task_id"] = f"hpo_task_{uuid.uuid4()}"
+        all_results = list(orchestrator.run(variants, settings, context))
 
     else:
         raise ValueError(f"Unknown orchestrator type: {orchestrator_type}")
@@ -84,7 +79,6 @@ def run_experiment_suite(config: Dict):
         print("\n--- Combined Experiment Analysis Summary ---")
         print(json.dumps(analysis_summary, indent=2))
 
-        # Also print the markdown report to console for immediate feedback
         markdown_report = generate_markdown_report(analysis_summary, config, run_timestamp)
         print("\n--- Markdown Summary ---")
         print(markdown_report)
@@ -100,7 +94,6 @@ def save_results(results: List[Dict], analysis: Dict, config: Dict, run_timestam
     output_dir = os.path.join(results_dir, f"run_{run_timestamp}")
     os.makedirs(output_dir, exist_ok=True)
 
-    # Save raw results JSON
     results_path = os.path.join(output_dir, "results.json")
     try:
         with open(results_path, "w") as f:
@@ -109,7 +102,6 @@ def save_results(results: List[Dict], analysis: Dict, config: Dict, run_timestam
     except IOError as e:
         print(f"Error saving raw results: {e}")
 
-    # Save summary markdown report
     report_path = os.path.join(output_dir, "summary.md")
     try:
         markdown_report = generate_markdown_report(analysis, config, run_timestamp)
@@ -120,5 +112,6 @@ def save_results(results: List[Dict], analysis: Dict, config: Dict, run_timestam
         print(f"Error saving summary report: {e}")
 
 if __name__ == "__main__":
+    import uuid # Add missing import for standalone execution
     config = load_config("config.yaml")
     run_experiment_suite(config)
