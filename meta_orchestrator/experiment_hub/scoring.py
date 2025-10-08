@@ -157,6 +157,21 @@ def generate_markdown_report(analysis: Dict, config: Dict, run_timestamp: str, r
                 report.append(f"- **Adversary Forged:** `{adversary_name}`")
                 report.append(f"- **Champion Hardening:** The champion `{champion_name}` was tested against the new adversary.")
                 report.append(f"  - **Outcome:** Achieved an average score of **{avg_hardening_score:.4f}** across {len(hardening_df)} trials.")
+
+                # Check for and report on any self-correction attempts in this generation
+                validation_df = gasi_df[(gasi_df['gasi_generation'] == gen) & (gasi_df['run_type'] == 'validation')]
+                if not validation_df.empty:
+                    patched_agent_name = validation_df['variant'].iloc[0]
+                    avg_validation_score = validation_df['score'].mean()
+
+                    report.append(f"- **Self-Correction Triggered:** The champion's poor performance initiated a self-healing attempt.")
+                    report.append(f"  - **Patched Agent Created:** `{patched_agent_name}`")
+                    report.append(f"  - **Validation Result:** The patched agent scored **{avg_validation_score:.4f}** against the same adversary.")
+
+                    if avg_validation_score > avg_hardening_score:
+                        report.append(f"  - **Promotion:** ✅ The patch was successful, and `{patched_agent_name}` was promoted to champion for the next generation.")
+                    else:
+                        report.append(f"  - **Promotion:** ❌ The patch failed to improve performance.")
             else:
                 report.append("- *No hardening results recorded for this generation.*")
 

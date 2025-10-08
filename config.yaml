@@ -50,6 +50,10 @@ orchestrator:
     initial_champion: "collaborative_agent_team"
     robustness_weight: 0.3
     hardening_trials_per_adversary: 15
+    self_correction:
+      enabled: true
+      hardening_failure_threshold: 0.25 # If hardening score is below this, trigger healing
+      validation_trials: 5 # Number of trials to validate a patch
 
 # Global settings
 results_dir: "meta_orchestrator/results"

@@ -26,6 +26,7 @@ from ..core.base_variant import AgentVariant
 from ..experiment_hub.variants import tunable_caching_agent, adversarial_agents
 from ..agent_forge.designer import AgentDesigner
 from ..agent_forge.code_generator import CodeGenerator
+from ..agent_forge.code_healer import CodeHealer
 
 # This registry is crucial for the unified orchestrator to find tunable classes
 TUNABLE_VARIANT_REGISTRY: Dict[str, Type[AgentVariant]] = {
@@ -373,6 +374,74 @@ class UnifiedOrchestrator:
             gasi_fitness_profiles[current_champion]['robustness_score'] = avg_hardening_score
             print(f"    - Hardening complete. Champion's average score against '{adversary_name}': {avg_hardening_score:.4f}")
             print(f"    - Updated robustness score for '{current_champion}' to be used in next generation.")
+
+            # 5. Self-Correction Phase: If the champion failed the hardening, attempt to heal it.
+            self_correction_settings = settings.get('self_correction', {})
+            if self_correction_settings.get('enabled', False) and avg_hardening_score < self_correction_settings.get('hardening_failure_threshold', 0.1):
+                print(f"  Phase 5: Self-Correction. Champion '{current_champion}' failed hardening (score {avg_hardening_score:.4f}).")
+
+                code_healer = CodeHealer()
+                # Assumption: variant name is lowercased class name, file is variant_name.py
+                champion_source_path = os.path.join(variants_dir, f"{current_champion}.py")
+
+                if not os.path.exists(champion_source_path):
+                    print(f"    - ERROR: Cannot find source for '{current_champion}'. Skipping self-correction.")
+                    continue
+
+                with open(champion_source_path, 'r') as f:
+                    original_source_code = f.read()
+
+                failure_analysis = {"adversary": adversary_name, "score": avg_hardening_score}
+                patched_source_code = code_healer.generate_patch(original_source_code, failure_analysis)
+
+                if patched_source_code != original_source_code:
+                    print("    - Patch generated. Creating and validating new agent version...")
+
+                    # Brittle: find original class name to create a new one
+                    original_class_name = next((line.split("class ")[1].split("(")[0].strip() for line in original_source_code.splitlines() if line.strip().startswith("class ")), None)
+
+                    if not original_class_name:
+                        print("    - ERROR: Could not determine original class name. Cannot apply patch.")
+                        continue
+
+                    patched_class_name = f"{original_class_name}_patched_{gen+1}"
+                    patched_variant_name = patched_class_name.lower()
+
+                    final_patched_code = patched_source_code.replace(f"class {original_class_name}", f"class {patched_class_name}", 1)
+
+                    with open(os.path.join(variants_dir, f"{patched_variant_name}.py"), 'w') as f:
+                        f.write(final_patched_code)
+
+                    importlib.reload(meta_orchestrator.experiment_hub.variants)
+                    print(f"    - Saved and registered new variant: '{patched_variant_name}'")
+
+                    # Validate the patched agent against the same adversary
+                    validation_results = []
+                    for _ in range(self_correction_settings.get('validation_trials', 5)):
+                        validation_context = run_trial(adversary_name, self.base_context.copy())
+                        patched_result = run_trial(patched_variant_name, validation_context)
+                        score = calculate_score(patched_result, self.config.get('scoring_weights'))
+                        patched_result.update({'score': score, 'gasi_generation': gen + 1, 'run_type': 'validation', 'adversary': adversary_name})
+                        validation_results.append(patched_result)
+                        self._write_to_bus(patched_result)
+                        yield patched_result
+
+                    avg_validation_score = np.mean([r['score'] for r in validation_results]) if validation_results else 0.0
+                    print(f"    - Validation complete. Patched agent score: {avg_validation_score:.4f}")
+
+                    if avg_validation_score > avg_hardening_score:
+                        print(f"    - SUCCESS: Patched agent improved performance and will be promoted.")
+                        current_champion = patched_variant_name
+                        # Update the fitness profile to reflect the successful patch
+                        gasi_fitness_profiles[current_champion] = {
+                            'general_score': avg_validation_score, # Use validation score as new baseline
+                            'robustness_score': avg_validation_score
+                        }
+                        print(f"    - PROMOTION: '{current_champion}' is the new champion for the next generation.")
+                    else:
+                        print(f"    - FAILURE: Patch did not improve performance. Original champion '{original_class_name.lower()}' is retained.")
+                else:
+                    print("    - Code Healer did not produce a patch.")
 
         print("\n--- GASI Run Concluded ---")
 
