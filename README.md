@@ -1,1 +1,1 @@
-# Javascript-agents
+# Super-agents
