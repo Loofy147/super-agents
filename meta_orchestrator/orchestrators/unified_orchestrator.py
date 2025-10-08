@@ -284,6 +284,7 @@ class UnifiedOrchestrator:
 
         current_champion = settings.get('initial_champion', 'collaborative_agent_team')
         current_adversaries = [v for v in self.config.get('variants', []) if 'adversarial' in v]
+        gasi_fitness_profiles = {} # Tracks {variant: {general_score: float, robustness_score: float}}
 
         for gen in range(num_generations):
             print(f"\n--- GASI Generation {gen+1}/{num_generations} ---")
@@ -308,23 +309,70 @@ class UnifiedOrchestrator:
             eval_results = list(self._run_standard_internal([challenger_name, current_champion], eval_config))
             for res in eval_results: yield res # Yield results for live view
 
-            # Determine the new champion
-            # (A simplified analysis; a real one would use the full analysis module)
-            champion_score = np.mean([r['score'] for r in eval_results if r['variant'] == current_champion])
-            challenger_score = np.mean([r['score'] for r in eval_results if r['variant'] == challenger_name])
+            # Determine the new champion using a weighted fitness score
+            robustness_weight = settings.get('robustness_weight', 0.3)
+            general_weight = 1.0 - robustness_weight
 
-            if challenger_score > champion_score:
-                print(f"  *** New Champion Crowned: {challenger_name} (Score: {challenger_score:.4f}) ***")
+            # Get general performance scores from the last evaluation
+            champ_general_score = np.mean([r['score'] for r in eval_results if r['variant'] == current_champion])
+            challenger_general_score = np.mean([r['score'] for r in eval_results if r['variant'] == challenger_name])
+
+            # Update profiles with general scores
+            gasi_fitness_profiles.setdefault(current_champion, {})['general_score'] = champ_general_score
+            gasi_fitness_profiles.setdefault(challenger_name, {})['general_score'] = challenger_general_score
+
+            # Calculate fitness for the champion, using its robustness score from the *previous* generation
+            # If no robustness score exists (e.g., first generation), it defaults to its general score
+            champ_robustness_score = gasi_fitness_profiles[current_champion].get('robustness_score', champ_general_score)
+            champ_fitness = (general_weight * champ_general_score) + (robustness_weight * champ_robustness_score)
+
+            # The challenger has no robustness score yet, so its fitness is just its general score
+            challenger_fitness = challenger_general_score
+
+            print(f"  - Fitness check: '{current_champion}' (Fitness: {champ_fitness:.4f}) vs. '{challenger_name}' (Fitness: {challenger_fitness:.4f})")
+
+            if challenger_fitness > champ_fitness:
+                print(f"  *** New Champion Crowned: {challenger_name} (Fitness: {challenger_fitness:.4f}) ***")
                 current_champion = challenger_name
             else:
-                print(f"  Champion '{current_champion}' defended its title (Score: {champion_score:.4f}).")
+                print(f"  Champion '{current_champion}' defended its title (Fitness: {champ_fitness:.4f}).")
 
-            # 3. Adversarial Phase: (Placeholder) Forge a new "Red Team" agent to defeat the champion
+            # 3. Adversarial Phase: Forge a new "Red Team" agent to defeat the champion
             print(f"  Phase 3: Forging new adversary to challenge '{current_champion}'...")
-            # TODO: Enhance AgentDesigner to take a target and design a specific weakness-exploiting adversary.
+            adversary_spec = agent_designer.design_adversarial_variant()
+            code_generator.generate_and_write_code(adversary_spec, variants_dir)
+            adversary_name = adversary_spec['name'].lower()
 
-            # 4. Hardening Phase: (Placeholder) Test champion against new adversary
-            print("  Phase 4: Hardening phase (skipped in this version).")
+            # Dynamically register the new adversary
+            importlib.reload(meta_orchestrator.experiment_hub.variants)
+            print(f"    - Adversary '{adversary_name}' has been generated and registered.")
+            current_adversaries.append(adversary_name)
+
+            # 4. Hardening Phase: Test champion against the new adversary
+            print(f"  Phase 4: Hardening phase. Pitting '{current_champion}' against new adversary '{adversary_name}'...")
+            hardening_trials = settings.get('hardening_trials_per_adversary', 10)
+
+            hardening_results = []
+            for _ in range(hardening_trials):
+                adversarial_context = run_trial(adversary_name, self.base_context.copy())
+                champion_result = run_trial(current_champion, adversarial_context)
+
+                score = calculate_score(champion_result, self.config.get('scoring_weights'))
+                champion_result['score'] = score
+                champion_result['gasi_generation'] = gen + 1
+                champion_result['run_type'] = 'hardening'
+                champion_result['adversary'] = adversary_name
+
+                hardening_results.append(champion_result)
+                self._write_to_bus(champion_result)
+                yield champion_result
+
+            # Calculate and store the robustness score for the current champion.
+            # This score will be used to calculate its fitness in the *next* generation.
+            avg_hardening_score = np.mean([r['score'] for r in hardening_results]) if hardening_results else 0.0
+            gasi_fitness_profiles[current_champion]['robustness_score'] = avg_hardening_score
+            print(f"    - Hardening complete. Champion's average score against '{adversary_name}': {avg_hardening_score:.4f}")
+            print(f"    - Updated robustness score for '{current_champion}' to be used in next generation.")
 
         print("\n--- GASI Run Concluded ---")
 

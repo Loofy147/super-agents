@@ -134,6 +134,32 @@ def generate_markdown_report(analysis: Dict, config: Dict, run_timestamp: str, r
         except Exception as e:
             report.append(f"\n*Causal analysis failed: {e}*")
 
+    # --- GASI Run Log ---
+    orch_config = config.get('orchestrator', {})
+    if orch_config.get('type') == 'gasi_run' and 'gasi_generation' in results_df.columns:
+        report.append("\n## ⚔️ Generative Adversarial Self-Improvement Log")
+
+        # Filter for GASI-specific results and ensure generation is an integer
+        gasi_df = results_df[results_df['gasi_generation'].notna()].copy()
+        gasi_df['gasi_generation'] = gasi_df['gasi_generation'].astype(int)
+
+        for gen in sorted(gasi_df['gasi_generation'].unique()):
+            report.append(f"\n### Generation {gen}")
+
+            # For each generation, we report on the hardening phase, which is the key outcome.
+            hardening_df = gasi_df[(gasi_df['gasi_generation'] == gen) & (gasi_df['run_type'] == 'hardening')]
+
+            if not hardening_df.empty:
+                champion_name = hardening_df['variant'].iloc[0]
+                adversary_name = hardening_df['adversary'].iloc[0]
+                avg_hardening_score = hardening_df['score'].mean()
+
+                report.append(f"- **Adversary Forged:** `{adversary_name}`")
+                report.append(f"- **Champion Hardening:** The champion `{champion_name}` was tested against the new adversary.")
+                report.append(f"  - **Outcome:** Achieved an average score of **{avg_hardening_score:.4f}** across {len(hardening_df)} trials.")
+            else:
+                report.append("- *No hardening results recorded for this generation.*")
+
     # --- Configuration Details ---
     report.append("\n## Experiment Configuration")
     report.append("### Scoring Weights")

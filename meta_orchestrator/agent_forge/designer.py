@@ -62,11 +62,75 @@ class AgentDesigner:
         print(f"  - Specification: {design_spec}")
         return design_spec
 
+    def design_adversarial_variant(self, target_profile: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Designs an adversarial agent variant specifically to challenge another agent.
+
+        Args:
+            target_profile: A dictionary containing information about the target agent,
+                            which could be used to select a tailored attack vector.
+
+        Returns:
+            A dictionary representing the design blueprint of the new adversarial agent.
+        """
+        print("--- Agent Forge: Designing new ADVERSARIAL agent ---")
+
+        adversarial_strategies = [
+            {
+                "name": "AmbiguityInjector",
+                "description": "Generates tasks with unclear or conflicting instructions to test an agent's ability to handle ambiguity.",
+                "base_class": "AdversarialVariant",
+            },
+            {
+                "name": "ResourceExhaustor",
+                "description": "Generates computationally expensive or resource-intensive tasks to test an agent's efficiency and limits.",
+                "base_class": "AdversarialVariant",
+            },
+            {
+                "name": "CacheBuster",
+                "description": "Generates a stream of unique, non-repeating tasks to defeat caching mechanisms.",
+                "base_class": "AdversarialVariant",
+            },
+            {
+                "name": "DeceptiveInstructor",
+                "description": "Creates tasks where the stated goal differs from the real success condition to test inference capabilities.",
+                "base_class": "AdversarialVariant",
+            }
+        ]
+
+        # In a more advanced implementation, we would analyze the target_profile
+        # to select the most effective adversarial strategy.
+        # For now, we select one at random.
+        chosen_strategy = random.choice(adversarial_strategies)
+
+        variant_name = f"{chosen_strategy['name']}Adversary"
+
+        design_spec = {
+            "name": variant_name,
+            "description": chosen_strategy['description'],
+            "architecture": "Adversarial",
+            "attributes": {
+                "strategy": chosen_strategy['name'],
+            },
+            "base_class": chosen_strategy['base_class'],
+            "source_file": f"{variant_name.lower()}.py"
+        }
+
+        print(f"  - Adversarial design created: {design_spec['name']}")
+        print(f"  - Strategy: {design_spec['attributes']['strategy']}")
+        return design_spec
+
+
 # Example Usage
 if __name__ == '__main__':
     designer = AgentDesigner()
-    new_agent_spec = designer.design_new_variant(existing_variants=["StatefulModularAgent"])
 
-    import json
-    print("\n--- Generated Agent Specification ---")
+    print("\n--- Designing a Standard Agent ---")
+    new_agent_spec = designer.design_new_variant(existing_variants=["StatefulModularAgent"])
+    print("\n--- Generated Standard Agent Specification ---")
     print(json.dumps(new_agent_spec, indent=2))
+
+    print("\n\n--- Designing an Adversarial Agent ---")
+    adversarial_spec = designer.design_adversarial_variant()
+    print("\n--- Generated Adversarial Agent Specification ---")
+    print(json.dumps(adversarial_spec, indent=2))
