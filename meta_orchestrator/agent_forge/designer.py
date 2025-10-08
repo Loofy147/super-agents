@@ -34,8 +34,11 @@ class AgentDesigner:
         chosen_attribute_value = random.choice(self.attributes[chosen_attribute_type])
         chosen_architecture = random.choice(self.architectures)
 
+        # Sanitize the attribute value to ensure it's a valid identifier component
+        sanitized_attribute = chosen_attribute_value.replace("-", "")
+
         # Generate a name for the new variant
-        variant_name = f"{chosen_attribute_value}{chosen_architecture}Agent"
+        variant_name = f"{sanitized_attribute}{chosen_architecture}Agent"
 
         # Avoid direct duplicates if possible
         if existing_variants and variant_name in existing_variants:

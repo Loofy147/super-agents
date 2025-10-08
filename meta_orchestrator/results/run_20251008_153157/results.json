@@ -1,0 +1,132 @@
+[
+  {
+    "success": 1,
+    "cost": 0.015,
+    "autonomy": 0.98,
+    "result_details": {
+      "plan_steps": 3,
+      "collaboration_successful": true
+    },
+    "variant": "collaborative_agent_team",
+    "trace_id": "7f3d6520-5991-4143-b284-1f49b2a6270c",
+    "timestamp": 1759937515.3514445,
+    "latency_internal_s": 0.20112022700050147
+  },
+  {
+    "success": 1,
+    "cost": 0.015,
+    "autonomy": 0.98,
+    "result_details": {
+      "plan_steps": 3,
+      "collaboration_successful": true
+    },
+    "variant": "collaborative_agent_team",
+    "trace_id": "4b2c0641-eec1-4369-9f1d-d0447794d2c1",
+    "timestamp": 1759937515.5531049,
+    "latency_internal_s": 0.20110395700066874
+  },
+  {
+    "success": 1,
+    "cost": 0.015,
+    "autonomy": 0.98,
+    "result_details": {
+      "plan_steps": 3,
+      "collaboration_successful": true
+    },
+    "variant": "collaborative_agent_team",
+    "trace_id": "1a4449f1-007f-4fad-a817-eefa7c460e9d",
+    "timestamp": 1759937515.7545066,
+    "latency_internal_s": 0.2011454590001449
+  },
+  {
+    "success": 1,
+    "cost": 0.015,
+    "autonomy": 0.98,
+    "result_details": {
+      "plan_steps": 3,
+      "collaboration_successful": true
+    },
+    "variant": "collaborative_agent_team",
+    "trace_id": "63e16ee8-bf9c-4f10-877f-44b567302a5f",
+    "timestamp": 1759937515.9558802,
+    "latency_internal_s": 0.20110352200026682
+  },
+  {
+    "success": 1,
+    "cost": 0.015,
+    "autonomy": 0.98,
+    "result_details": {
+      "plan_steps": 3,
+      "collaboration_successful": true
+    },
+    "variant": "collaborative_agent_team",
+    "trace_id": "0e076173-ac55-49fd-b106-67d17181df09",
+    "timestamp": 1759937516.1572878,
+    "latency_internal_s": 0.20115614899987122
+  },
+  {
+    "success": 1,
+    "cost": 0.015,
+    "autonomy": 0.98,
+    "result_details": {
+      "plan_steps": 3,
+      "collaboration_successful": true
+    },
+    "variant": "collaborative_agent_team",
+    "trace_id": "c7664ee1-fba3-4a99-8d9f-46d946f5cf1d",
+    "timestamp": 1759937516.3587432,
+    "latency_internal_s": 0.20116503200006264
+  },
+  {
+    "success": 1,
+    "cost": 0.015,
+    "autonomy": 0.98,
+    "result_details": {
+      "plan_steps": 3,
+      "collaboration_successful": true
+    },
+    "variant": "collaborative_agent_team",
+    "trace_id": "124caf47-b688-4a9d-9b8a-cb51dc77fc41",
+    "timestamp": 1759937516.5601337,
+    "latency_internal_s": 0.2010963990005621
+  },
+  {
+    "success": 1,
+    "cost": 0.015,
+    "autonomy": 0.98,
+    "result_details": {
+      "plan_steps": 3,
+      "collaboration_successful": true
+    },
+    "variant": "collaborative_agent_team",
+    "trace_id": "25638845-6282-4453-9d7f-af8aa56d62a8",
+    "timestamp": 1759937516.7614105,
+    "latency_internal_s": 0.20103426600053353
+  },
+  {
+    "success": 1,
+    "cost": 0.015,
+    "autonomy": 0.98,
+    "result_details": {
+      "plan_steps": 3,
+      "collaboration_successful": true
+    },
+    "variant": "collaborative_agent_team",
+    "trace_id": "9bf1861c-70a5-469b-92da-6b39d5c86cb0",
+    "timestamp": 1759937516.9628096,
+    "latency_internal_s": 0.20110688800014032
+  },
+  {
+    "success": 1,
+    "cost": 0.015,
+    "autonomy": 0.98,
+    "result_details": {
+      "plan_steps": 3,
+      "collaboration_successful": true
+    },
+    "variant": "collaborative_agent_team",
+    "trace_id": "27d89a6d-f0a9-4890-a97c-3fda467dac17",
+    "timestamp": 1759937517.1643455,
+    "latency_internal_s": 0.20118365899998025
+  }
+]

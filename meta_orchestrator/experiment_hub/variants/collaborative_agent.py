@@ -1,7 +1,14 @@
 import time
 from typing import Dict, Any, List
 
+# Conditionally import ray
+try:
+    import ray
+except ImportError:
+    ray = None
+
 from ...core.base_variant import AgentVariant
+from ...core.resource_manager import ResourceManager
 from ..registry import register
 
 class CollaborativeAgentTeam(AgentVariant):
@@ -31,28 +38,45 @@ class CollaborativeAgentTeam(AgentVariant):
 
     def run(self, context: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Orchestrates the collaboration between the Planner and Executor agents.
+        Orchestrates collaboration, correctly handling both local ResourceManager
+        instances and remote Ray Actor handles.
         """
-        task_description = context.get("task_id", "default_task")
+        resource_manager = context.get("resource_manager")
+        if resource_manager is None:
+            raise ValueError("Context must include a 'resource_manager'.")
 
-        # 1. Planner runs first
-        plan = self._planner_agent(task_description)
+        is_ray_actor = ray and isinstance(resource_manager, ray.actor.ActorHandle)
 
-        # 2. Executor runs second
-        execution_success = self._executor_agent(plan)
+        required_resources = {"cpu_seconds": 2, "planning_credits": 1}
 
-        # This agent has high autonomy because it manages an internal team.
-        # Its cost is higher due to the overhead of two sub-agents.
-        # Its success depends on the execution.
-        return {
-            "success": 1 if execution_success else 0,
-            "cost": 0.015,  # Higher base cost for multi-agent coordination
-            "autonomy": 0.98,
-            "result_details": {
-                "plan_steps": len(plan),
-                "collaboration_successful": True,
+        # 1. Request resources, handling local vs. remote object
+        if is_ray_actor:
+            # Asynchronous call to the actor, then block for the result
+            was_approved = ray.get(resource_manager.request_resources.remote(required_resources))
+        else:
+            was_approved = resource_manager.request_resources(required_resources)
+
+        if not was_approved:
+            return {"success": 0, "cost": 0.0, "autonomy": 0.98, "failure_reason": "RESOURCE_DENIED"}
+
+        try:
+            # 2. Proceed with agent logic
+            task_description = context.get("task_id", "default_task")
+            plan = self._planner_agent(task_description)
+            execution_success = self._executor_agent(plan)
+
+            return {
+                "success": 1 if execution_success else 0,
+                "cost": 0.015,
+                "autonomy": 0.98,
+                "result_details": {"plan_steps": len(plan)}
             }
-        }
+        finally:
+            # 3. Always release resources
+            if is_ray_actor:
+                resource_manager.release_resources.remote(required_resources)
+            else:
+                resource_manager.release_resources(required_resources)
 
 # Register the new collaborative agent variant
 register("collaborative_agent_team")(CollaborativeAgentTeam())

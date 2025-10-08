@@ -34,15 +34,8 @@ def calculate_score(trial_result: Dict, weights: Dict) -> float:
 
 def analyze_results(results: List[Dict], scoring_weights: Dict) -> Dict:
     """
-    Analyzes a list of experiment results, calculating aggregate statistics
-    and scores for each variant.
-
-    Args:
-        results: A list of trial result dictionaries from an experiment run.
-        scoring_weights: The weights used for scoring.
-
-    Returns:
-        A dictionary containing analysis for each variant.
+    Analyzes a list of experiment results, calculating aggregate statistics,
+    scores, and economic metrics for each variant.
     """
     variants = set(r['variant'] for r in results)
     analysis_summary = {}
@@ -52,7 +45,10 @@ def analyze_results(results: List[Dict], scoring_weights: Dict) -> Dict:
         if not variant_results:
             continue
 
-        scores = [calculate_score(r, scoring_weights) for r in variant_results if 'score' not in r]
+        # --- Performance Score Calculation ---
+        # Exclude trials that failed due to resource denial from scoring
+        scorable_results = [r for r in variant_results if r.get("failure_reason") != "RESOURCE_DENIED"]
+        scores = [calculate_score(r, scoring_weights) for r in scorable_results if 'score' not in r]
 
         mean_score = np.mean(scores) if scores else 0
         std_dev = np.std(scores) if scores else 0
@@ -62,14 +58,20 @@ def analyze_results(results: List[Dict], scoring_weights: Dict) -> Dict:
         else:
             ci_95 = float('nan')
 
+        # --- Economic Metric Calculation ---
+        denied_trials = sum(1 for r in variant_results if r.get("failure_reason") == "RESOURCE_DENIED")
+        total_trials = len(variant_results)
+        denial_rate = denied_trials / total_trials if total_trials > 0 else 0
+
         analysis_summary[variant] = {
-            "trials": len(variant_results),
+            "trials": total_trials,
             "mean_score": round(mean_score, 4),
             "score_std_dev": round(std_dev, 4),
             "mean_score_ci_95": round(ci_95, 4),
-            "mean_latency_s": round(np.mean([r.get("latency_internal_s", 0) for r in variant_results]), 4),
-            "total_cost": round(np.sum([r.get("cost", 0) for r in variant_results]), 4),
-            "success_rate": round(np.mean([r.get("success", 0) for r in variant_results]), 4)
+            "mean_latency_s": round(np.mean([r.get("latency_internal_s", 0) for r in scorable_results]), 4),
+            "total_cost": round(np.sum([r.get("cost", 0) for r in scorable_results]), 4),
+            "success_rate": round(np.mean([r.get("success", 0) for r in scorable_results]), 4),
+            "resource_denial_rate": round(denial_rate, 4),
         }
     return analysis_summary
 
@@ -101,6 +103,22 @@ def generate_markdown_report(analysis: Dict, config: Dict, run_timestamp: str, r
         success_str = f"{stats['success_rate']:.2%}"
         row = f"| {rank} | `{name}` | {score_str} | {success_str} | {stats['mean_latency_s']:.4f} | {stats['total_cost']:.4f} | {stats['trials']} |"
         report.append(row)
+
+    # --- Economic Efficiency ---
+    report.append("\n## 💰 Economic Efficiency")
+    economic_variants = {v: s for v, s in analysis.items() if "resource_denial_rate" in s}
+    if not any(s['resource_denial_rate'] > 0 for s in economic_variants.values()):
+        report.append("No resource contention was observed in this run.")
+    else:
+        eco_header = "| Variant | Resource Denial Rate |"
+        eco_separator = "|:--------|:--------------------:|"
+        report.append(eco_header)
+        report.append(eco_separator)
+        sorted_economic = sorted(economic_variants.items(), key=lambda item: item[1]['resource_denial_rate'], reverse=True)
+        for name, stats in sorted_economic:
+            denial_rate_str = f"{stats['resource_denial_rate']:.2%}"
+            row = f"| `{name}` | {denial_rate_str} |"
+            report.append(row)
 
     # --- Causal Analysis ---
     if CausalAnalyzer:
