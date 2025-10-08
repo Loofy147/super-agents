@@ -1,0 +1,4 @@
+# This file is for pip compatibility.
+# For project metadata, see pyproject.toml.
+numpy
+pyyaml
