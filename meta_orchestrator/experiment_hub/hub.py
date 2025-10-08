@@ -49,11 +49,9 @@ def run_experiment_suite(config: Dict):
         # Initialize core services that will be available to all agents
         interpreter_instance = Interpreter()
 
-        # Conditionally create the ResourceManager as a Ray Actor or a local instance
-        if backend_type == "ray":
-            resource_manager_instance = ResourceManager.remote(config.get("resources"))
-        else:
-            resource_manager_instance = ResourceManager(config.get("resources"))
+        # The ResourceManager is always a Ray Actor to ensure a single, central
+        # point of control for resources, even in a "local" execution setup.
+        resource_manager_instance = ResourceManager.remote(config.get("resources"))
 
         base_context = {
             "interpreter": interpreter_instance,

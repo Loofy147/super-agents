@@ -24,6 +24,8 @@ from ..experiment_hub.execution import run_trial
 from ..experiment_hub.scoring import calculate_score
 from ..core.base_variant import AgentVariant
 from ..experiment_hub.variants import tunable_caching_agent, adversarial_agents
+from ..agent_forge.designer import AgentDesigner
+from ..agent_forge.code_generator import CodeGenerator
 
 # This registry is crucial for the unified orchestrator to find tunable classes
 TUNABLE_VARIANT_REGISTRY: Dict[str, Type[AgentVariant]] = {
@@ -58,6 +60,10 @@ class UnifiedOrchestrator:
         """Writes a single trial result to the live run bus."""
         if not self.live_run_path:
             return
+
+        # Ensure the directory for the live run file exists
+        os.makedirs(os.path.dirname(self.live_run_path), exist_ok=True)
+
         with open(self.live_run_path, "a") as f:
             # We need to handle non-serializable numpy types
             serializable_result = {}
@@ -89,6 +95,8 @@ class UnifiedOrchestrator:
             yield from self._run_bayesian_optimization()
         elif orchestrator_type == 'adversarial_benchmark':
             yield from self._run_adversarial_benchmark()
+        elif orchestrator_type == 'gasi_run':
+            yield from self._run_gasi()
         else:
             raise ValueError(f"Unknown orchestrator type: '{orchestrator_type}'")
 
@@ -263,3 +271,72 @@ class UnifiedOrchestrator:
                     yield target_result
                 except Exception as e:
                     print(f"    ERROR running target {target_variant}: {e}")
+
+    # --- Generative Adversarial Self-Improvement (GASI) Logic ---
+    def _run_gasi(self) -> Generator[Dict[str, Any], None, None]:
+        print("\n--- INITIATING GENERATIVE ADVERSARIAL SELF-IMPROVEMENT RUN ---")
+        settings = self.orchestrator_config.get('gasi_settings', {})
+        num_generations = settings.get('generations', 3)
+
+        agent_designer = AgentDesigner()
+        code_generator = CodeGenerator()
+        variants_dir = os.path.join(os.path.dirname(__file__), "..", "experiment_hub", "variants")
+
+        current_champion = settings.get('initial_champion', 'collaborative_agent_team')
+        current_adversaries = [v for v in self.config.get('variants', []) if 'adversarial' in v]
+
+        for gen in range(num_generations):
+            print(f"\n--- GASI Generation {gen+1}/{num_generations} ---")
+
+            # 1. Generation Phase: Forge a new "Blue Team" agent to challenge the champion
+            print("  Phase 1: Forging new challenger agent...")
+            new_spec = agent_designer.design_new_variant(existing_variants=[current_champion])
+            code_generator.generate_and_write_code(new_spec, variants_dir)
+            challenger_name = new_spec['name'].lower()
+
+            # We need to re-import to register the new variant
+            import importlib
+            import meta_orchestrator.experiment_hub.variants
+            importlib.reload(meta_orchestrator.experiment_hub.variants)
+
+            # 2. Evaluation Phase: Benchmark challenger against the champion
+            print(f"  Phase 2: Benchmarking '{challenger_name}' vs. champion '{current_champion}'...")
+            eval_config = {
+                'trials_per_variant': 20,
+                'execution_backend': self.backend_config
+            }
+            eval_results = list(self._run_standard_internal([challenger_name, current_champion], eval_config))
+            for res in eval_results: yield res # Yield results for live view
+
+            # Determine the new champion
+            # (A simplified analysis; a real one would use the full analysis module)
+            champion_score = np.mean([r['score'] for r in eval_results if r['variant'] == current_champion])
+            challenger_score = np.mean([r['score'] for r in eval_results if r['variant'] == challenger_name])
+
+            if challenger_score > champion_score:
+                print(f"  *** New Champion Crowned: {challenger_name} (Score: {challenger_score:.4f}) ***")
+                current_champion = challenger_name
+            else:
+                print(f"  Champion '{current_champion}' defended its title (Score: {champion_score:.4f}).")
+
+            # 3. Adversarial Phase: (Placeholder) Forge a new "Red Team" agent to defeat the champion
+            print(f"  Phase 3: Forging new adversary to challenge '{current_champion}'...")
+            # TODO: Enhance AgentDesigner to take a target and design a specific weakness-exploiting adversary.
+
+            # 4. Hardening Phase: (Placeholder) Test champion against new adversary
+            print("  Phase 4: Hardening phase (skipped in this version).")
+
+        print("\n--- GASI Run Concluded ---")
+
+    def _run_standard_internal(self, variants, config) -> Generator[Dict[str, Any], None, None]:
+        """Internal helper to run a standard experiment, used by GASI."""
+        # This is a simplified version of the main _run_standard method for internal use
+        trials_per_variant = config['trials_per_variant']
+        exp_context = self.base_context.copy()
+        for _ in range(trials_per_variant):
+            for v_name in variants:
+                result = run_trial(v_name, exp_context)
+                score = calculate_score(result, self.config.get('scoring_weights'))
+                result['score'] = score
+                self._write_to_bus(result)
+                yield result

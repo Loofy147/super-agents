@@ -66,10 +66,13 @@ class TestExperimentPipeline(unittest.TestCase):
         config = hub.load_config(self.test_config_path)
         hub.run_experiment_suite(config)
 
-        # 2. Verify that a single run directory was created
+        # 2. Verify that a single run directory was created, ignoring other files
         self.assertTrue(os.path.exists(self.test_results_dir))
-        run_dirs = os.listdir(self.test_results_dir)
-        self.assertEqual(len(run_dirs), 1, "Expected exactly one run directory.")
+
+        # Filter for subdirectories starting with "run_" to ignore dashboard log files
+        run_dirs = [d for d in os.listdir(self.test_results_dir) if os.path.isdir(os.path.join(self.test_results_dir, d)) and d.startswith("run_")]
+
+        self.assertEqual(len(run_dirs), 1, f"Expected exactly one run directory, but found {len(run_dirs)}.")
 
         run_dir_path = os.path.join(self.test_results_dir, run_dirs[0])
         self.assertTrue(os.path.isdir(run_dir_path))
