@@ -59,12 +59,39 @@ def run_experiment_suite(config: Dict):
     elif orchestrator_type == 'bayesian_optimization':
         orchestrator = BayesianOptOrchestrator()
         settings = orchestrator_config.get('tuning_settings', {})
-        # The 'variants' for this orchestrator is just the single tunable agent
         variants = [settings.get('variant')]
         print(f"\n--- Running Bayesian Optimization for: {variants[0]} ---")
-        # The context needs a consistent task_id for comparing parameter sets
         context["task_id"] = f"hpo_task_{uuid.uuid4()}"
         all_results = list(orchestrator.run(variants, settings, context))
+
+    elif orchestrator_type == 'adversarial_benchmark':
+        settings = orchestrator_config.get('adversarial_settings', {})
+        adversary_variant = settings.get('adversary_variant')
+        target_variants = settings.get('target_variants')
+        trials_per_target = settings.get('trials_per_target', 10)
+
+        if not adversary_variant or not target_variants:
+            raise ValueError("Adversarial benchmark requires 'adversary_variant' and 'target_variants' to be set.")
+
+        print(f"\n--- Running Adversarial Benchmark ---")
+        print(f"Adversary: '{adversary_variant}', Targets: {target_variants}")
+
+        # Run the adversary to generate a poisoned context for each trial
+        for i in range(trials_per_target):
+            print(f"\n--- Adversarial Trial {i+1}/{trials_per_target} ---")
+            adversarial_context = run_trial(adversary_variant, context)
+
+            # Now run all target agents against this single poisoned context
+            for target_variant in target_variants:
+                print(f"  - Testing '{target_variant}' against poisoned context...")
+                try:
+                    # We add metadata about the adversarial run to the result
+                    target_result = run_trial(target_variant, adversarial_context)
+                    target_result['adversary'] = adversary_variant
+                    target_result['adversarial_strategy'] = adversarial_context.get('adversarial_strategy')
+                    all_results.append(target_result)
+                except Exception as e:
+                    print(f"    ERROR running target {target_variant}: {e}")
 
     else:
         raise ValueError(f"Unknown orchestrator type: {orchestrator_type}")

@@ -1,0 +1,15 @@
+orchestrator:
+  type: adversarial_benchmark
+  adversarial_settings:
+    adversary_variant: adversarial_ambiguity_injector
+    target_variants:
+    - slower_reliable_probe
+    - caching_agent
+    - collaborative_agent_team
+    trials_per_target: 15
+results_dir: meta_orchestrator/results
+scoring_weights:
+  autonomy: 0.4
+  success: 0.35
+  cost: -0.15
+  latency: -0.1

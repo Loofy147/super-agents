@@ -1,0 +1,587 @@
+[
+  {
+    "success": 1,
+    "cost": 0.005,
+    "autonomy": 0.95,
+    "variant": "slower_reliable_probe",
+    "trace_id": "9d71bcfa-c7ca-4579-a1e8-f90941794223",
+    "timestamp": 1759930728.224788,
+    "latency_internal_s": 0.10025786300002437,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_vagueness"
+  },
+  {
+    "success": 1,
+    "cost": 0.008,
+    "autonomy": 0.9,
+    "was_cached": false,
+    "result": "result_for_Generate a summary of our project's progress. Make it 'good' and 'impactful'.",
+    "variant": "caching_agent",
+    "trace_id": "e596c914-6a31-4af2-9cd9-67c1ad5fe7a3",
+    "timestamp": 1759930728.3751566,
+    "latency_internal_s": 0.1502933040001153,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_vagueness"
+  },
+  {
+    "success": 1,
+    "cost": 0.015,
+    "autonomy": 0.98,
+    "result_details": {
+      "plan_steps": 5,
+      "collaboration_successful": true
+    },
+    "variant": "collaborative_agent_team",
+    "trace_id": "792af725-156d-4303-bc5f-5c7ed8eb7086",
+    "timestamp": 1759930728.6566808,
+    "latency_internal_s": 0.2814516349999394,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_vagueness"
+  },
+  {
+    "success": 1,
+    "cost": 0.005,
+    "autonomy": 0.95,
+    "variant": "slower_reliable_probe",
+    "trace_id": "bba65fcd-c623-4ed9-b8e3-693e945ddc87",
+    "timestamp": 1759930728.7571495,
+    "latency_internal_s": 0.10030086900042079,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_excessive_detail"
+  },
+  {
+    "success": 1,
+    "cost": 0.008,
+    "autonomy": 0.9,
+    "was_cached": false,
+    "result": "result_for_Generate a summary of our project's progress. Also, please consider the synergistic implications of our Q3 roadmap, etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc, while bearing in mind the fiscal responsibilities outlined in the shareholder agreement.",
+    "variant": "caching_agent",
+    "trace_id": "13511560-602b-4909-bbdf-e765a5f6d8d0",
+    "timestamp": 1759930728.9076567,
+    "latency_internal_s": 0.15040256300017063,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_excessive_detail"
+  },
+  {
+    "success": 1,
+    "cost": 0.015,
+    "autonomy": 0.98,
+    "result_details": {
+      "plan_steps": 3,
+      "collaboration_successful": true
+    },
+    "variant": "collaborative_agent_team",
+    "trace_id": "3853a83b-ed07-4ae1-8339-b1256b6728a6",
+    "timestamp": 1759930729.109123,
+    "latency_internal_s": 0.20134331300005215,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_excessive_detail"
+  },
+  {
+    "success": 1,
+    "cost": 0.005,
+    "autonomy": 0.95,
+    "variant": "slower_reliable_probe",
+    "trace_id": "c988ad95-e3e8-4d5a-932c-cb31749e2976",
+    "timestamp": 1759930729.2096105,
+    "latency_internal_s": 0.10030785499975536,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_excessive_detail"
+  },
+  {
+    "success": 1,
+    "cost": 0.0001,
+    "autonomy": 0.9,
+    "was_cached": true,
+    "result": "result_for_Generate a summary of our project's progress. Also, please consider the synergistic implications of our Q3 roadmap, etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc, while bearing in mind the fiscal responsibilities outlined in the shareholder agreement.",
+    "variant": "caching_agent",
+    "trace_id": "7640b55c-a13b-4e21-9637-24a021b83a56",
+    "timestamp": 1759930729.209692,
+    "latency_internal_s": 4.484000010052114e-05,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_excessive_detail"
+  },
+  {
+    "success": 1,
+    "cost": 0.015,
+    "autonomy": 0.98,
+    "result_details": {
+      "plan_steps": 3,
+      "collaboration_successful": true
+    },
+    "variant": "collaborative_agent_team",
+    "trace_id": "4a4b4ff4-fce0-43f4-8864-6666984ca3e7",
+    "timestamp": 1759930729.4110243,
+    "latency_internal_s": 0.20123590399998648,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_excessive_detail"
+  },
+  {
+    "success": 1,
+    "cost": 0.005,
+    "autonomy": 0.95,
+    "variant": "slower_reliable_probe",
+    "trace_id": "fab2b2c6-72ad-4595-a31f-d67c0b347126",
+    "timestamp": 1759930729.5116138,
+    "latency_internal_s": 0.10038426999972216,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_vagueness"
+  },
+  {
+    "success": 1,
+    "cost": 0.0001,
+    "autonomy": 0.9,
+    "was_cached": true,
+    "result": "result_for_Generate a summary of our project's progress. Make it 'good' and 'impactful'.",
+    "variant": "caching_agent",
+    "trace_id": "7c8387d2-3903-4aa1-8fc5-be4065ada784",
+    "timestamp": 1759930729.511689,
+    "latency_internal_s": 2.2292999801720725e-05,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_vagueness"
+  },
+  {
+    "success": 1,
+    "cost": 0.015,
+    "autonomy": 0.98,
+    "result_details": {
+      "plan_steps": 5,
+      "collaboration_successful": true
+    },
+    "variant": "collaborative_agent_team",
+    "trace_id": "14d33d59-ca19-4501-8187-414b0f98fb5e",
+    "timestamp": 1759930729.7937753,
+    "latency_internal_s": 0.2818946130000768,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_vagueness"
+  },
+  {
+    "success": 1,
+    "cost": 0.005,
+    "autonomy": 0.95,
+    "variant": "slower_reliable_probe",
+    "trace_id": "71071bff-c481-481b-a8ac-ecd107f0f483",
+    "timestamp": 1759930729.8945808,
+    "latency_internal_s": 0.1003892859998814,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_excessive_detail"
+  },
+  {
+    "success": 1,
+    "cost": 0.0001,
+    "autonomy": 0.9,
+    "was_cached": true,
+    "result": "result_for_Generate a summary of our project's progress. Also, please consider the synergistic implications of our Q3 roadmap, etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc, while bearing in mind the fiscal responsibilities outlined in the shareholder agreement.",
+    "variant": "caching_agent",
+    "trace_id": "abee080b-ddcc-41ba-8f23-6c66e89b177a",
+    "timestamp": 1759930729.8947833,
+    "latency_internal_s": 3.7197999972704565e-05,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_excessive_detail"
+  },
+  {
+    "success": 1,
+    "cost": 0.015,
+    "autonomy": 0.98,
+    "result_details": {
+      "plan_steps": 3,
+      "collaboration_successful": true
+    },
+    "variant": "collaborative_agent_team",
+    "trace_id": "f922331c-3b7c-458d-a7e4-20b22c00e6e0",
+    "timestamp": 1759930730.0962133,
+    "latency_internal_s": 0.20128830100020423,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_excessive_detail"
+  },
+  {
+    "success": 1,
+    "cost": 0.005,
+    "autonomy": 0.95,
+    "variant": "slower_reliable_probe",
+    "trace_id": "5858596f-b93f-415a-98a2-fb4f1c837998",
+    "timestamp": 1759930730.1968489,
+    "latency_internal_s": 0.10037924600010228,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_contradiction"
+  },
+  {
+    "success": 1,
+    "cost": 0.008,
+    "autonomy": 0.9,
+    "was_cached": false,
+    "result": "result_for_Generate a summary of our project's progress. Keep it brief, under 10 words, but also ensure it is a comprehensive and detailed overview covering all aspects.",
+    "variant": "caching_agent",
+    "trace_id": "6a91df24-53be-447a-859d-3751225df249",
+    "timestamp": 1759930730.3473494,
+    "latency_internal_s": 0.1503828350000731,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_contradiction"
+  },
+  {
+    "success": 1,
+    "cost": 0.015,
+    "autonomy": 0.98,
+    "result_details": {
+      "plan_steps": 5,
+      "collaboration_successful": true
+    },
+    "variant": "collaborative_agent_team",
+    "trace_id": "f8ddc9cc-4011-4ead-84c3-bf16472e611c",
+    "timestamp": 1759930730.629258,
+    "latency_internal_s": 0.2817858079997677,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_contradiction"
+  },
+  {
+    "success": 1,
+    "cost": 0.005,
+    "autonomy": 0.95,
+    "variant": "slower_reliable_probe",
+    "trace_id": "2d269398-c750-433d-b4be-0b52569eb75c",
+    "timestamp": 1759930730.729987,
+    "latency_internal_s": 0.10033315800001219,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_contradiction"
+  },
+  {
+    "success": 1,
+    "cost": 0.0001,
+    "autonomy": 0.9,
+    "was_cached": true,
+    "result": "result_for_Generate a summary of our project's progress. Keep it brief, under 10 words, but also ensure it is a comprehensive and detailed overview covering all aspects.",
+    "variant": "caching_agent",
+    "trace_id": "bb49b41a-5b3e-4aa2-a357-ae0c8fd5e66f",
+    "timestamp": 1759930730.7300873,
+    "latency_internal_s": 2.326399999219575e-05,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_contradiction"
+  },
+  {
+    "success": 1,
+    "cost": 0.015,
+    "autonomy": 0.98,
+    "result_details": {
+      "plan_steps": 5,
+      "collaboration_successful": true
+    },
+    "variant": "collaborative_agent_team",
+    "trace_id": "55ce58c6-7047-4d4c-8f30-a877238ca878",
+    "timestamp": 1759930731.0121047,
+    "latency_internal_s": 0.28192091800019625,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_contradiction"
+  },
+  {
+    "success": 1,
+    "cost": 0.005,
+    "autonomy": 0.95,
+    "variant": "slower_reliable_probe",
+    "trace_id": "9158c885-6572-418a-9912-7e1978161d26",
+    "timestamp": 1759930731.112644,
+    "latency_internal_s": 0.10038098899985926,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_contradiction"
+  },
+  {
+    "success": 1,
+    "cost": 0.0001,
+    "autonomy": 0.9,
+    "was_cached": true,
+    "result": "result_for_Generate a summary of our project's progress. Keep it brief, under 10 words, but also ensure it is a comprehensive and detailed overview covering all aspects.",
+    "variant": "caching_agent",
+    "trace_id": "c510fd77-5f7a-40c3-861e-681bfb5f3c34",
+    "timestamp": 1759930731.112735,
+    "latency_internal_s": 2.416200004518032e-05,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_contradiction"
+  },
+  {
+    "success": 1,
+    "cost": 0.015,
+    "autonomy": 0.98,
+    "result_details": {
+      "plan_steps": 5,
+      "collaboration_successful": true
+    },
+    "variant": "collaborative_agent_team",
+    "trace_id": "6e4eb82c-0bf7-4b2c-a60c-57411f88e830",
+    "timestamp": 1759930731.3947787,
+    "latency_internal_s": 0.2819629390000955,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_contradiction"
+  },
+  {
+    "success": 1,
+    "cost": 0.005,
+    "autonomy": 0.95,
+    "variant": "slower_reliable_probe",
+    "trace_id": "8092d64f-dad5-48e3-9c7d-35200a84369b",
+    "timestamp": 1759930731.4952464,
+    "latency_internal_s": 0.10030234099986046,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_vagueness"
+  },
+  {
+    "success": 1,
+    "cost": 0.0001,
+    "autonomy": 0.9,
+    "was_cached": true,
+    "result": "result_for_Generate a summary of our project's progress. Make it 'good' and 'impactful'.",
+    "variant": "caching_agent",
+    "trace_id": "d42940c9-8de7-4611-b6e5-3aa5d7aaa163",
+    "timestamp": 1759930731.4953222,
+    "latency_internal_s": 3.159700008836808e-05,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_vagueness"
+  },
+  {
+    "success": 1,
+    "cost": 0.015,
+    "autonomy": 0.98,
+    "result_details": {
+      "plan_steps": 5,
+      "collaboration_successful": true
+    },
+    "variant": "collaborative_agent_team",
+    "trace_id": "076c10e0-e710-472b-9887-d5c6810acd1e",
+    "timestamp": 1759930731.7773619,
+    "latency_internal_s": 0.281800304999706,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_vagueness"
+  },
+  {
+    "success": 1,
+    "cost": 0.005,
+    "autonomy": 0.95,
+    "variant": "slower_reliable_probe",
+    "trace_id": "aaf6acf9-c04f-475f-b230-608c6416045e",
+    "timestamp": 1759930731.8778727,
+    "latency_internal_s": 0.10032008799998948,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_contradiction"
+  },
+  {
+    "success": 1,
+    "cost": 0.0001,
+    "autonomy": 0.9,
+    "was_cached": true,
+    "result": "result_for_Generate a summary of our project's progress. Keep it brief, under 10 words, but also ensure it is a comprehensive and detailed overview covering all aspects.",
+    "variant": "caching_agent",
+    "trace_id": "83b22812-0b6c-4c0b-a16d-8061b63d1a70",
+    "timestamp": 1759930731.8780508,
+    "latency_internal_s": 2.6653000077203615e-05,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_contradiction"
+  },
+  {
+    "success": 1,
+    "cost": 0.015,
+    "autonomy": 0.98,
+    "result_details": {
+      "plan_steps": 5,
+      "collaboration_successful": true
+    },
+    "variant": "collaborative_agent_team",
+    "trace_id": "957b85c0-e2a9-4370-8c1b-8f963b030e72",
+    "timestamp": 1759930732.160031,
+    "latency_internal_s": 0.2818751089998841,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_contradiction"
+  },
+  {
+    "success": 1,
+    "cost": 0.005,
+    "autonomy": 0.95,
+    "variant": "slower_reliable_probe",
+    "trace_id": "63383c15-1d17-4997-bced-7d66ad3b5cfb",
+    "timestamp": 1759930732.2606466,
+    "latency_internal_s": 0.10032647799971528,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_vagueness"
+  },
+  {
+    "success": 1,
+    "cost": 0.0001,
+    "autonomy": 0.9,
+    "was_cached": true,
+    "result": "result_for_Generate a summary of our project's progress. Make it 'good' and 'impactful'.",
+    "variant": "caching_agent",
+    "trace_id": "69c5842d-b871-4755-95e0-5af10918a0fe",
+    "timestamp": 1759930732.2607136,
+    "latency_internal_s": 1.2784999853465706e-05,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_vagueness"
+  },
+  {
+    "success": 1,
+    "cost": 0.015,
+    "autonomy": 0.98,
+    "result_details": {
+      "plan_steps": 5,
+      "collaboration_successful": true
+    },
+    "variant": "collaborative_agent_team",
+    "trace_id": "362efdf3-f56b-48e0-8190-dcdab68abcdd",
+    "timestamp": 1759930732.5424895,
+    "latency_internal_s": 0.2816717310001877,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_vagueness"
+  },
+  {
+    "success": 1,
+    "cost": 0.005,
+    "autonomy": 0.95,
+    "variant": "slower_reliable_probe",
+    "trace_id": "25fcd229-8c5a-4171-bb43-62a2530e5d98",
+    "timestamp": 1759930732.6433675,
+    "latency_internal_s": 0.10036634100015362,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_vagueness"
+  },
+  {
+    "success": 1,
+    "cost": 0.0001,
+    "autonomy": 0.9,
+    "was_cached": true,
+    "result": "result_for_Generate a summary of our project's progress. Make it 'good' and 'impactful'.",
+    "variant": "caching_agent",
+    "trace_id": "e08f586e-8174-429f-8478-3d22680a94a3",
+    "timestamp": 1759930732.6434267,
+    "latency_internal_s": 1.2712000170722604e-05,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_vagueness"
+  },
+  {
+    "success": 1,
+    "cost": 0.015,
+    "autonomy": 0.98,
+    "result_details": {
+      "plan_steps": 5,
+      "collaboration_successful": true
+    },
+    "variant": "collaborative_agent_team",
+    "trace_id": "933f0ba9-8718-48a1-96db-6a54786e43ee",
+    "timestamp": 1759930732.9253736,
+    "latency_internal_s": 0.2818477470000289,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_vagueness"
+  },
+  {
+    "success": 1,
+    "cost": 0.005,
+    "autonomy": 0.95,
+    "variant": "slower_reliable_probe",
+    "trace_id": "ab30ffdf-f453-4a96-a817-a02d2bc66e95",
+    "timestamp": 1759930733.0258734,
+    "latency_internal_s": 0.10031784200009497,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_vagueness"
+  },
+  {
+    "success": 1,
+    "cost": 0.0001,
+    "autonomy": 0.9,
+    "was_cached": true,
+    "result": "result_for_Generate a summary of our project's progress. Make it 'good' and 'impactful'.",
+    "variant": "caching_agent",
+    "trace_id": "950df362-291e-4e50-8518-1519fb3545b4",
+    "timestamp": 1759930733.0259233,
+    "latency_internal_s": 1.2924999737151666e-05,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_vagueness"
+  },
+  {
+    "success": 1,
+    "cost": 0.015,
+    "autonomy": 0.98,
+    "result_details": {
+      "plan_steps": 5,
+      "collaboration_successful": true
+    },
+    "variant": "collaborative_agent_team",
+    "trace_id": "271f415b-002f-45b3-aba1-7d4193ff2741",
+    "timestamp": 1759930733.3080251,
+    "latency_internal_s": 0.2819973289997506,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_vagueness"
+  },
+  {
+    "success": 1,
+    "cost": 0.005,
+    "autonomy": 0.95,
+    "variant": "slower_reliable_probe",
+    "trace_id": "aaedbfc2-0fb3-475b-8d08-502830e98c3c",
+    "timestamp": 1759930733.4085448,
+    "latency_internal_s": 0.1003215580003598,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_excessive_detail"
+  },
+  {
+    "success": 1,
+    "cost": 0.0001,
+    "autonomy": 0.9,
+    "was_cached": true,
+    "result": "result_for_Generate a summary of our project's progress. Also, please consider the synergistic implications of our Q3 roadmap, etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc etc, while bearing in mind the fiscal responsibilities outlined in the shareholder agreement.",
+    "variant": "caching_agent",
+    "trace_id": "ae932bad-d203-41ac-ba2d-732e8eaaffab",
+    "timestamp": 1759930733.408606,
+    "latency_internal_s": 1.1916999937966466e-05,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_excessive_detail"
+  },
+  {
+    "success": 1,
+    "cost": 0.015,
+    "autonomy": 0.98,
+    "result_details": {
+      "plan_steps": 3,
+      "collaboration_successful": true
+    },
+    "variant": "collaborative_agent_team",
+    "trace_id": "763beb03-7827-4a00-a931-6fa15cda2d65",
+    "timestamp": 1759930733.6150858,
+    "latency_internal_s": 0.20363012400002845,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_excessive_detail"
+  },
+  {
+    "success": 1,
+    "cost": 0.005,
+    "autonomy": 0.95,
+    "variant": "slower_reliable_probe",
+    "trace_id": "7ca01f62-a537-44e7-9fa1-6ff60874f997",
+    "timestamp": 1759930733.717165,
+    "latency_internal_s": 0.10111627200012663,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_contradiction"
+  },
+  {
+    "success": 1,
+    "cost": 0.0001,
+    "autonomy": 0.9,
+    "was_cached": true,
+    "result": "result_for_Generate a summary of our project's progress. Keep it brief, under 10 words, but also ensure it is a comprehensive and detailed overview covering all aspects.",
+    "variant": "caching_agent",
+    "trace_id": "ad476056-2793-48e6-af66-227e01d80842",
+    "timestamp": 1759930733.718124,
+    "latency_internal_s": 4.610600035448442e-05,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_contradiction"
+  },
+  {
+    "success": 1,
+    "cost": 0.015,
+    "autonomy": 0.98,
+    "result_details": {
+      "plan_steps": 5,
+      "collaboration_successful": true
+    },
+    "variant": "collaborative_agent_team",
+    "trace_id": "6681a0ba-90b0-4ad4-98ea-9ffc0c588a34",
+    "timestamp": 1759930734.0042298,
+    "latency_internal_s": 0.2853699649999726,
+    "adversary": "adversarial_ambiguity_injector",
+    "adversarial_strategy": "add_contradiction"
+  }
+]
