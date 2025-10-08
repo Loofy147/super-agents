@@ -2,6 +2,7 @@ import json
 import yaml
 import os
 import uuid
+import pandas as pd
 from datetime import datetime
 from typing import Dict, Any, List
 
@@ -75,19 +76,22 @@ def run_experiment_suite(config: Dict):
 
         analysis_summary = analyze_results(all_results, scoring_weights)
 
-        save_results(all_results, analysis_summary, config, run_timestamp)
+        # Convert results to a DataFrame for causal analysis and reporting
+        results_df = pd.DataFrame(all_results)
+
+        save_results(all_results, analysis_summary, config, run_timestamp, results_df)
 
         print("\n--- Combined Experiment Analysis Summary ---")
         print(json.dumps(analysis_summary, indent=2))
 
-        markdown_report = generate_markdown_report(analysis_summary, config, run_timestamp)
+        markdown_report = generate_markdown_report(analysis_summary, config, run_timestamp, results_df)
         print("\n--- Markdown Summary ---")
         print(markdown_report)
     else:
         print("\nNo results to analyze.")
 
 
-def save_results(results: List[Dict], analysis: Dict, config: Dict, run_timestamp: str):
+def save_results(results: List[Dict], analysis: Dict, config: Dict, run_timestamp: str, results_df: pd.DataFrame):
     """
     Saves the experiment results, analysis report, and the config used for the
     run to a timestamped directory.
@@ -108,7 +112,7 @@ def save_results(results: List[Dict], analysis: Dict, config: Dict, run_timestam
     # Save summary markdown report
     report_path = os.path.join(output_dir, "summary.md")
     try:
-        markdown_report = generate_markdown_report(analysis, config, run_timestamp)
+        markdown_report = generate_markdown_report(analysis, config, run_timestamp, results_df)
         with open(report_path, "w") as f:
             f.write(markdown_report)
         print(f"Markdown summary report saved to {report_path}")
