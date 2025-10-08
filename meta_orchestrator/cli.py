@@ -1,8 +1,12 @@
 import argparse
 import os
 import json
+import subprocess
+import sys
 from .experiment_hub.hub import load_config, run_experiment_suite
 from .code_modernizer.modernizer import CodeModernizer
+from .code_modernizer.llm_modernizer import LLMModernizer
+from .testing.scaffolder import TestScaffolder
 
 def main():
     """
@@ -21,31 +25,67 @@ def main():
         help="Path to the configuration file (default: config.yaml)."
     )
 
+    # --- 'dashboard' command ---
+    subparsers.add_parser("dashboard", help="Launch the interactive Streamlit dashboard.")
+
     # --- 'analyze' command ---
     analyze_parser = subparsers.add_parser(
         "analyze",
-        help="Analyze a Python file for modernization suggestions."
+        help="Analyze a Python file for rule-based modernization suggestions."
     )
     analyze_parser.add_argument(
         "filepath",
         help="The path to the Python file to analyze."
     )
 
+    # --- 'suggest-refactor' command ---
+    refactor_parser = subparsers.add_parser(
+        "suggest-refactor",
+        help="Use an LLM to suggest refactorings for a file."
+    )
+    refactor_parser.add_argument(
+        "filepath",
+        help="The path to the Python file to refactor."
+    )
+    refactor_parser.add_argument(
+        "-p", "--prompt",
+        required=True,
+        help="The natural language prompt describing the desired change."
+    )
+
+    # --- 'scaffold-tests' command ---
+    scaffold_parser = subparsers.add_parser(
+        "scaffold-tests",
+        help="Generate a boilerplate unittest file for an agent variant."
+    )
+    scaffold_parser.add_argument(
+        "filepath",
+        help="Path to the agent variant's Python file."
+    )
+
     args = parser.parse_args()
 
     if args.command == "run":
         if not os.path.exists(args.config):
-            print(f"Error: Configuration file not found at '{args.config}'")
+            print(f"Error: Configuration file not found at '{args.config}'", file=sys.stderr)
             return
         config = load_config(args.config)
         run_experiment_suite(config)
 
+    elif args.command == "dashboard":
+        dashboard_path = os.path.join(os.path.dirname(__file__), "dashboard", "app.py")
+        if not os.path.exists(dashboard_path):
+            print(f"Error: Dashboard application not found at '{dashboard_path}'", file=sys.stderr)
+            return
+        print("Launching the Meta-Orchestrator Dashboard...")
+        subprocess.run(["streamlit", "run", dashboard_path])
+
     elif args.command == "analyze":
         if not os.path.exists(args.filepath):
-            print(f"Error: File not found at '{args.filepath}'")
+            print(f"Error: File not found at '{args.filepath}'", file=sys.stderr)
             return
         if not args.filepath.endswith(".py"):
-            print("Error: The 'analyze' command only works on Python (.py) files.")
+            print("Error: The 'analyze' command only works on Python (.py) files.", file=sys.stderr)
             return
 
         modernizer = CodeModernizer()
@@ -56,6 +96,31 @@ def main():
             print(json.dumps(suggestions, indent=2))
         else:
             print(f"\nNo suggestions found for '{args.filepath}'. Great work!")
+
+    elif args.command == "suggest-refactor":
+        if not os.path.exists(args.filepath):
+            print(f"Error: File not found at '{args.filepath}'", file=sys.stderr)
+            return
+        try:
+            llm_modernizer = LLMModernizer()
+            suggestion_diff = llm_modernizer.suggest_refactor(args.filepath, args.prompt)
+            print("\n--- Suggested Changes (Diff) ---")
+            print(suggestion_diff)
+        except ValueError as e:
+            print(f"Configuration Error: {e}", file=sys.stderr)
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}", file=sys.stderr)
+
+    elif args.command == "scaffold-tests":
+        if not os.path.exists(args.filepath):
+            print(f"Error: File not found at '{args.filepath}'", file=sys.stderr)
+            return
+        if not args.filepath.endswith(".py"):
+            print("Error: The 'scaffold-tests' command only works on Python (.py) files.", file=sys.stderr)
+            return
+
+        scaffolder = TestScaffolder()
+        scaffolder.scaffold(args.filepath)
 
 
 if __name__ == "__main__":
