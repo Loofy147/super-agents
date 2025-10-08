@@ -67,15 +67,22 @@ class CausalAnalyzer:
             # 4. Estimate the effect
             estimate = model.estimate_effect(
                 identified_estimand,
-                method_name="backdoor.linear_regression",
-                test_significance=True
+                method_name="backdoor.linear_regression"
             )
 
-            # 5. Generate a human-readable insight
-            causal_effect = estimate.value
-            p_value = estimate.test_significance()['p_value'][0]
+            # 5. Refute the estimate to check for statistical significance
+            refute_result = model.refute_estimate(
+                identified_estimand,
+                estimate,
+                method_name="placebo_treatment_refuter",
+                placebo_type="permute"
+            )
 
-            if p_value < 0.05: # Is the result statistically significant?
+            # 6. Generate a human-readable insight
+            causal_effect = estimate.value
+            p_value = refute_result.refutation_result["p_value"]
+
+            if p_value < 0.05:
                 insight = (
                     f"**Finding for Caching Agents:** A cache hit (`was_cached=True`) "
                     f"**causes** an estimated **{causal_effect:.4f}s change** in mean latency. "

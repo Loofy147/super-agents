@@ -1,7 +1,14 @@
 import json
-from typing import Dict, List, Optional
+from typing import Dict, List
 import numpy as np
+import pandas as pd
 from datetime import datetime
+
+# Conditionally import CausalAnalyzer to allow the system to run without dowhy
+try:
+    from ..analysis.causal_analyzer import CausalAnalyzer
+except ImportError:
+    CausalAnalyzer = None
 
 def calculate_score(trial_result: Dict, weights: Dict) -> float:
     """
@@ -45,16 +52,15 @@ def analyze_results(results: List[Dict], scoring_weights: Dict) -> Dict:
         if not variant_results:
             continue
 
-        scores = [calculate_score(r, scoring_weights) for r in variant_results]
+        scores = [calculate_score(r, scoring_weights) for r in variant_results if 'score' not in r]
 
         mean_score = np.mean(scores) if scores else 0
         std_dev = np.std(scores) if scores else 0
 
-        # Calculate 95% confidence interval, handle case with 1 trial
         if len(scores) > 1:
             ci_95 = 1.96 * (std_dev / np.sqrt(len(scores)))
         else:
-            ci_95 = float('nan') # Not meaningful for a single data point
+            ci_95 = float('nan')
 
         analysis_summary[variant] = {
             "trials": len(variant_results),
@@ -67,15 +73,14 @@ def analyze_results(results: List[Dict], scoring_weights: Dict) -> Dict:
         }
     return analysis_summary
 
-def generate_markdown_report(analysis: Dict, config: Dict, run_timestamp: str) -> str:
+def generate_markdown_report(analysis: Dict, config: Dict, run_timestamp: str, results_df: pd.DataFrame) -> str:
     """
-    Generates a human-readable Markdown report from the analysis summary.
+    Generates a human-readable Markdown report, including causal insights.
     """
     report = []
     report.append("# Experiment Run Summary")
     report.append(f"**Run Timestamp:** `{run_timestamp}`")
 
-    # --- Orchestrator Info ---
     orch_config = config.get('orchestrator', {})
     report.append(f"**Orchestrator:** `{orch_config.get('type', 'standard')}`")
     if orch_config.get('type') == 'mab':
@@ -84,23 +89,32 @@ def generate_markdown_report(analysis: Dict, config: Dict, run_timestamp: str) -
         report.append(f"- **Total Trials:** `{mab_settings.get('total_trials')}`")
 
     report.append("\n## Overall Variant Ranking")
-    report.append("Ranked by `mean_score` (higher is better).")
-
-    # --- Results Table ---
     header = "| Rank | Variant | Mean Score (± 95% CI) | Success Rate | Avg Latency (s) | Total Cost | Trials |"
     separator = "|:----:|:--------|:----------------------|:--------------:|:----------------:|:------------:|:------:|"
     report.append(header)
     report.append(separator)
 
-    # Sort variants by mean score, descending
     sorted_variants = sorted(analysis.items(), key=lambda item: item[1]['mean_score'], reverse=True)
-
     for i, (name, stats) in enumerate(sorted_variants):
         rank = i + 1
         score_str = f"{stats['mean_score']:.4f} (± {stats['mean_score_ci_95']:.4f})"
         success_str = f"{stats['success_rate']:.2%}"
         row = f"| {rank} | `{name}` | {score_str} | {success_str} | {stats['mean_latency_s']:.4f} | {stats['total_cost']:.4f} | {stats['trials']} |"
         report.append(row)
+
+    # --- Causal Analysis ---
+    if CausalAnalyzer:
+        try:
+            causal_analyzer = CausalAnalyzer(results_df, config)
+            insights = causal_analyzer.run_all_analyses()
+            if insights:
+                report.append("\n## 🧠 Causal Insights")
+                for insight in insights:
+                    report.append(f"- {insight}")
+        except ImportError:
+            report.append("\n*Causal analysis skipped: 'dowhy' library not installed.*")
+        except Exception as e:
+            report.append(f"\n*Causal analysis failed: {e}*")
 
     # --- Configuration Details ---
     report.append("\n## Experiment Configuration")
@@ -110,25 +124,3 @@ def generate_markdown_report(analysis: Dict, config: Dict, run_timestamp: str) -
     report.append("```")
 
     return "\n".join(report)
-
-# Example usage:
-if __name__ == "__main__":
-    mock_results = [
-        {'success': 1, 'cost': 0.001, 'autonomy': 0.8, 'latency_internal_s': 0.02, 'variant': 'in_memory_probe'},
-        {'success': 1, 'cost': 0.005, 'autonomy': 0.95, 'latency_internal_s': 0.1, 'variant': 'slower_reliable_probe'},
-        {'success': 0, 'cost': 0.001, 'autonomy': 0.8, 'latency_internal_s': 0.02, 'variant': 'in_memory_probe'},
-        {'success': 1, 'cost': 0.005, 'autonomy': 0.95, 'latency_internal_s': 0.1, 'variant': 'slower_reliable_probe'}
-    ]
-    mock_config = {
-        "orchestrator": {"type": "standard"},
-        "scoring_weights": {"autonomy": 0.4, "success": 0.35, "cost": -0.15, "latency": -0.1}
-    }
-
-    summary = analyze_results(mock_results, mock_config['scoring_weights'])
-
-    print("--- Analysis Summary (JSON) ---")
-    print(json.dumps(summary, indent=2))
-
-    print("\n--- Generated Markdown Report ---")
-    markdown = generate_markdown_report(summary, mock_config, datetime.now().strftime("%Y%m%d_%H%M%S"))
-    print(markdown)
