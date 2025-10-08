@@ -50,10 +50,14 @@ def _run_trial_local(variant, context: Dict) -> Dict:
 if ray:
     @ray.remote
     def run_trial_remote(variant, context: Dict) -> Dict:
-        """The Ray remote version of the trial execution function."""
-        # This function runs on a remote worker, so it needs to re-import REGISTRY
-        # or have it passed in. For simplicity, we assume it's available if the
-        # code is shipped correctly.
+        """
+        The Ray remote version of the trial execution function.
+        Crucially, this runs on the remote worker process.
+        """
+        # We must import the variants here, inside the remote function,
+        # to ensure that the agent registry is populated on the Ray worker
+        # before the trial is executed.
+        import meta_orchestrator.experiment_hub.variants
         return _run_trial_local(variant, context)
 
 # The main run_trial function is now a dispatcher

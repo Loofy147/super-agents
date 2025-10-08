@@ -14,6 +14,7 @@ except ImportError:
 
 from .registry import REGISTRY
 from ..core.interpreter import Interpreter
+from ..core.resource_manager import ResourceManager
 from .scoring import analyze_results, generate_markdown_report
 from ..orchestrators.unified_orchestrator import UnifiedOrchestrator
 from .execution import run_trial, configure_execution_backend
@@ -45,8 +46,19 @@ def run_experiment_suite(config: Dict):
         configure_execution_backend(backend_type)
         print(f"Registered variants: {list(REGISTRY.keys())}")
 
+        # Initialize core services that will be available to all agents
         interpreter_instance = Interpreter()
-        base_context = {"interpreter": interpreter_instance}
+
+        # Conditionally create the ResourceManager as a Ray Actor or a local instance
+        if backend_type == "ray":
+            resource_manager_instance = ResourceManager.remote(config.get("resources"))
+        else:
+            resource_manager_instance = ResourceManager(config.get("resources"))
+
+        base_context = {
+            "interpreter": interpreter_instance,
+            "resource_manager": resource_manager_instance,
+        }
 
         # Instantiate the single, powerful orchestrator
         orchestrator = UnifiedOrchestrator(config, base_context)
