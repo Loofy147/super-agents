@@ -88,12 +88,14 @@ def run_experiment_suite(config: Dict):
 
 def save_results(results: List[Dict], analysis: Dict, config: Dict, run_timestamp: str):
     """
-    Saves the experiment results and analysis report to a timestamped directory.
+    Saves the experiment results, analysis report, and the config used for the
+    run to a timestamped directory.
     """
     results_dir = config.get("results_dir", "meta_orchestrator/results")
     output_dir = os.path.join(results_dir, f"run_{run_timestamp}")
     os.makedirs(output_dir, exist_ok=True)
 
+    # Save raw results JSON
     results_path = os.path.join(output_dir, "results.json")
     try:
         with open(results_path, "w") as f:
@@ -102,6 +104,7 @@ def save_results(results: List[Dict], analysis: Dict, config: Dict, run_timestam
     except IOError as e:
         print(f"Error saving raw results: {e}")
 
+    # Save summary markdown report
     report_path = os.path.join(output_dir, "summary.md")
     try:
         markdown_report = generate_markdown_report(analysis, config, run_timestamp)
@@ -110,6 +113,15 @@ def save_results(results: List[Dict], analysis: Dict, config: Dict, run_timestam
         print(f"Markdown summary report saved to {report_path}")
     except IOError as e:
         print(f"Error saving summary report: {e}")
+
+    # Save the configuration used for this run
+    config_path = os.path.join(output_dir, "config.yaml")
+    try:
+        with open(config_path, "w") as f:
+            yaml.dump(config, f, default_flow_style=False, sort_keys=False)
+        print(f"Run configuration saved to {config_path}")
+    except IOError as e:
+        print(f"Error saving run configuration: {e}")
 
 if __name__ == "__main__":
     import uuid # Add missing import for standalone execution
