@@ -1,6 +1,6 @@
 import yaml
 import os
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 class ConfigGenerator:
     """
