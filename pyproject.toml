@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "meta-orchestrator"
-version = "1.0.0"
+version = "2.1.0" # Version bump for new features
 authors = [
     {name = "Jules", email = "jules@example.com"},
 ]
@@ -19,6 +19,8 @@ classifiers = [
 dependencies = [
     "numpy",
     "pyyaml",
+    "openai", # Keeping for when the key is available
+    "streamlit", # Add new dependency for the dashboard
 ]
 
 [project.urls]

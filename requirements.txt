@@ -2,3 +2,5 @@
 # For project metadata, see pyproject.toml.
 numpy
 pyyaml
+openai
+streamlit
