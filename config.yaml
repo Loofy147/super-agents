@@ -4,41 +4,57 @@
 # Select the orchestration strategy for running experiments.
 # - 'standard': Runs a fixed number of trials for each variant.
 # - 'mab': Uses a Multi-Armed Bandit to dynamically allocate trials.
+# - 'bayesian_optimization': Uses Bayesian Optimization to tune agent parameters.
+# - 'adversarial_benchmark': Pits target agents against a specific adversary.
+# - 'gasi_run': Runs a full Generative Adversarial Self-Improvement loop.
 orchestrator:
-  type: "standard"  # Can be "standard" or "mab"
+  type: "gasi_run"  # Can be "standard", "mab", "bayesian_optimization", "adversarial_benchmark", "gasi_run"
 
   # Settings for the standard orchestrator
   standard_settings:
-    # This section is used when orchestrator.type is "standard"
     experiments:
       - name: "Stateless Probes"
         enabled: true
-        variants:
-          - "in_memory_probe"
-          - "slower_reliable_probe"
+        variants: ["in_memory_probe", "slower_reliable_probe"]
         trials_per_variant: 20
-
       - name: "Caching Agent"
         enabled: true
-        variants:
-          - "caching_agent"
-        trials_per_variant: 5 # Will be run sequentially on the same task to test caching
+        variants: ["caching_agent"]
+        trials_per_variant: 5
 
   # Settings for the Multi-Armed Bandit orchestrator
   mab_settings:
-    # This section is used when orchestrator.type is "mab"
-    strategy: "thompson_sampling" # "epsilon_greedy" or "thompson_sampling"
-    epsilon: 0.1 # Epsilon value for epsilon-greedy strategy
-    total_trials: 200 # The total number of trials the MAB can run
+    strategy: "thompson_sampling"
+    epsilon: 0.1
+    total_trials: 200
     variants: ["in_memory_probe", "slower_reliable_probe", "caching_agent"]
 
+  # Settings for the Bayesian Optimization orchestrator
+  tuning_settings:
+    variant: "tunable_caching_agent"
+    parameter_space:
+      initial_cache_size: {type: 'int', range: [1, 20]}
+      learning_rate: {type: 'float', range: [0.001, 0.1]}
+    total_configs: 50
+    trials_per_config: 5
+
+  # Settings for the Adversarial Benchmark orchestrator
+  adversarial_settings:
+    adversary_variant: "adversarial_ambiguity_injector"
+    target_variants: ["caching_agent", "collaborative_agent_team"]
+    trials_per_target: 20
+
+  # Settings for the Generative Adversarial Self-Improvement (GASI) orchestrator
+  gasi_settings:
+    generations: 5
+    initial_champion: "collaborative_agent_team"
+    robustness_weight: 0.3
+    hardening_trials_per_adversary: 15
 
 # Global settings
-results_dir: "meta_orchestrator/results" # Base directory for saving results
+results_dir: "meta_orchestrator/results"
 
 # Scoring weights
-# These weights determine the overall score for an agent variant.
-# Higher is better. Negative values mean that a higher metric is worse.
 scoring_weights:
   autonomy: 0.4
   success: 0.35
