@@ -2,7 +2,7 @@ import time
 from typing import Dict, Any
 from collections import OrderedDict
 
-from ...core.base_tunable_variant import TunableAgentVariant
+from ...core.base_variant import AgentVariant
 from ...core.interpreter import Interpreter
 from ..registry import register
 
@@ -10,12 +10,12 @@ from ..registry import register
 # will be responsible for instantiating it with specific parameters.
 # However, we can register a default instance for standard runs if desired.
 
-class TunableCachingAgent(TunableAgentVariant):
+class TunableCachingAgent(AgentVariant):
     """
     A caching agent whose behavior is controlled by tunable hyperparameters.
     """
 
-    def __init__(self, params: Dict[str, Any]):
+    def __init__(self, params: Dict[str, Any] = None):
         """
         Initializes the agent with specific parameters.
 

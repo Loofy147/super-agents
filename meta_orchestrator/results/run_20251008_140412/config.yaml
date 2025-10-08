@@ -1,0 +1,15 @@
+orchestrator:
+  type: standard
+  standard_settings:
+    experiments:
+    - name: Stochastic Agent Validation
+      enabled: true
+      variants:
+      - stochastic_agent
+      trials_per_variant: 30
+results_dir: meta_orchestrator/results
+scoring_weights:
+  autonomy: 0.4
+  success: 0.35
+  cost: -0.15
+  latency: -0.1
