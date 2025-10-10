@@ -33,6 +33,14 @@ class ResourceManager:
         Attempts to acquire a set of resources. Ray ensures that calls to this
         method are executed serially, making it thread-safe without manual locks.
         """
+        # --- FIX START ---
+        # Validate that all requested amounts are non-negative
+        for resource, amount in required_resources.items():
+            if amount < 0:
+                print(f"  - Actor: Resource request denied: Negative amount requested for '{resource}'.")
+                return False
+        # --- FIX END ---
+
         # Check if all required resources are available
         for resource, amount in required_resources.items():
             if self.resources.get(resource, 0) < amount:

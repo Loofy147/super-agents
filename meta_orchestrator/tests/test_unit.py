@@ -1,12 +1,54 @@
 import unittest
 import time
 
+import ray
+from meta_orchestrator.core.resource_manager import ResourceManager
 # Import the components to be tested using absolute paths
 from meta_orchestrator.core.interpreter import Interpreter
 from meta_orchestrator.experiment_hub.scoring import calculate_score
 from meta_orchestrator.experiment_hub.variants.caching_agent import CachingAgent
 
 class TestMetaOrchestrator(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # Initialize Ray once for all tests in this class
+        if not ray.is_initialized():
+            ray.init(logging_level="ERROR")
+
+    @classmethod
+    def tearDownClass(cls):
+        # Shutdown Ray after all tests are done
+        if ray.is_initialized():
+            ray.shutdown()
+
+    def test_resource_manager_prevents_negative_request(self):
+        """
+        Tests that the ResourceManager actor correctly rejects requests for
+        negative resource amounts.
+        """
+        print("\nRunning test: test_resource_manager_prevents_negative_request")
+        initial_resources = {"credits": 100}
+
+        # Instantiate the ResourceManager as a Ray actor
+        manager_actor = ResourceManager.remote(initial_resources)
+
+        # Attempt to exploit the bug by requesting a negative amount
+        exploit_request = {"credits": -50}
+
+        # Call the actor method and get the result
+        request_approved_future = manager_actor.request_resources.remote(exploit_request)
+        request_approved = ray.get(request_approved_future)
+
+        # 1. Assert that the malicious request was denied
+        self.assertFalse(request_approved, "The request for negative resources should be denied.")
+
+        # 2. Assert that the resource pool was not altered
+        final_resources_future = manager_actor.get_available_resources.remote()
+        final_resources = ray.get(final_resources_future)
+
+        self.assertEqual(initial_resources["credits"], final_resources.get("credits", 0),
+                         "The resource pool should not change after a denied negative request.")
 
     def test_calculate_score(self):
         """Tests the scoring function with a known trial result."""
