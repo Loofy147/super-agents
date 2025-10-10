@@ -6,9 +6,48 @@ from meta_orchestrator.core.resource_manager import ResourceManager
 # Import the components to be tested using absolute paths
 from meta_orchestrator.core.interpreter import Interpreter
 from meta_orchestrator.experiment_hub.scoring import calculate_score
+from meta_orchestrator.agent_forge.designer import AgentDesigner
 from meta_orchestrator.experiment_hub.variants.caching_agent import CachingAgent
 
 class TestMetaOrchestrator(unittest.TestCase):
+
+    def test_agent_designer_handles_multiple_duplicate_names(self):
+        """
+        Tests that the AgentDesigner correctly generates unique, incrementing
+        version numbers (V2, V3, etc.) when encountering multiple existing
+        variants with the same base name.
+        """
+        print("\nRunning test: test_agent_designer_handles_multiple_duplicate_names")
+        designer = AgentDesigner()
+
+        # Mock random.choice to return a predictable sequence of values,
+        # ensuring the base name "StatefulModularAgent" is always generated.
+        import random
+        original_choice = random.choice
+        mock_choices = ["Memory", "Stateful", "Modular"]
+        def mock_choice_func(seq):
+            # The first call to choice is for the attribute type
+            if "Memory" in seq:
+                return "Memory"
+            # The second is for the attribute value
+            if "Stateful" in seq:
+                return "Stateful"
+            # The third is for the architecture
+            if "Modular" in seq:
+                return "Modular"
+            return original_choice(seq) # Fallback for unexpected calls
+        random.choice = mock_choice_func
+
+        existing = ["StatefulModularAgent", "StatefulModularAgentV2"]
+        new_spec = designer.design_new_variant(existing_variants=existing)
+
+        # Restore the original random.choice to avoid side effects
+        random.choice = original_choice
+
+        # The current logic incorrectly produces "StatefulModularAgentV2" again.
+        # A correct implementation should produce "StatefulModularAgentV3".
+        self.assertEqual(new_spec["name"], "StatefulModularAgentV3",
+                         "Designer should produce V3 when V2 already exists.")
 
     @classmethod
     def setUpClass(cls):

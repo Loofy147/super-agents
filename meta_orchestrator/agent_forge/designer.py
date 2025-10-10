@@ -1,4 +1,5 @@
 import random
+import json
 from typing import Dict, Any, List
 
 class AgentDesigner:
@@ -40,9 +41,15 @@ class AgentDesigner:
         # Generate a name for the new variant
         variant_name = f"{sanitized_attribute}{chosen_architecture}Agent"
 
-        # Avoid direct duplicates if possible
-        if existing_variants and variant_name in existing_variants:
-            variant_name = f"{variant_name}V2"
+        # --- FIX START ---
+        # Ensure the generated name is unique by incrementing a version suffix.
+        if existing_variants:
+            base_name = variant_name
+            version = 2
+            while variant_name in existing_variants:
+                variant_name = f"{base_name}V{version}"
+                version += 1
+        # --- FIX END ---
 
         design_spec = {
             "name": variant_name,
