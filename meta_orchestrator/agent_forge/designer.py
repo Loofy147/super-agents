@@ -40,9 +40,13 @@ class AgentDesigner:
         # Generate a name for the new variant
         variant_name = f"{sanitized_attribute}{chosen_architecture}Agent"
 
-        # Avoid direct duplicates if possible
-        if existing_variants and variant_name in existing_variants:
-            variant_name = f"{variant_name}V2"
+        # Ensure the generated name is unique
+        if existing_variants:
+            base_name = variant_name
+            version = 2
+            while variant_name in existing_variants:
+                variant_name = f"{base_name}V{version}"
+                version += 1
 
         design_spec = {
             "name": variant_name,
@@ -123,6 +127,7 @@ class AgentDesigner:
 
 # Example Usage
 if __name__ == '__main__':
+    import json
     designer = AgentDesigner()
 
     print("\n--- Designing a Standard Agent ---")
