@@ -7,9 +7,9 @@ try:
 except ImportError:
     ray = None
 
-from ...core.base_variant import AgentVariant
-from ...core.resource_manager import ResourceManager
-from ..registry import register
+from meta_orchestrator.core.base_variant import AgentVariant
+from meta_orchestrator.core.resource_manager import ResourceManager
+from meta_orchestrator.experiment_hub.registry import register
 
 class CollaborativeAgentTeam(AgentVariant):
     """

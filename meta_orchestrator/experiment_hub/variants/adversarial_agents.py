@@ -1,8 +1,8 @@
 import random
 from typing import Dict, Any
 
-from ...core.base_variant import AgentVariant
-from ..registry import register
+from meta_orchestrator.core.base_variant import AgentVariant
+from meta_orchestrator.experiment_hub.registry import register
 
 class AmbiguityInjectorVariant(AgentVariant):
     """
