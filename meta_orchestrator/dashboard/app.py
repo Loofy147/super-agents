@@ -7,6 +7,7 @@ import time
 import subprocess
 import sys
 from datetime import datetime
+from typing import List, Generator, Dict, Any
 
 # --- Configuration ---
 RESULTS_DIR = os.path.join(os.path.dirname(__file__), "..", "results")
@@ -21,7 +22,7 @@ st.set_page_config(
 
 # --- Helper Functions ---
 @st.cache_data
-def get_past_runs():
+def get_past_runs() -> List[str]:
     """Scans the results directory for past experiment runs."""
     if not os.path.exists(RESULTS_DIR):
         return []
@@ -29,7 +30,7 @@ def get_past_runs():
     run_dirs.sort(key=lambda x: datetime.strptime(x, "run_%Y%m%d_%H%M%S"), reverse=True)
     return run_dirs
 
-def run_experiment_in_background(config_path: str):
+def run_experiment_in_background(config_path: str) -> None:
     """Launches the CLI experiment runner as a non-blocking background process."""
     command = [sys.executable, "-m", "meta_orchestrator.cli", "run", "-c", config_path]
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -39,7 +40,7 @@ def run_experiment_in_background(config_path: str):
     if os.path.exists(LIVE_RUN_FILE):
         os.remove(LIVE_RUN_FILE)
 
-def tail_live_results():
+def tail_live_results() -> Generator[Dict[str, Any], None, None]:
     """A generator that tails the live run file and yields new results."""
     if not os.path.exists(LIVE_RUN_FILE):
         return
@@ -56,7 +57,7 @@ def tail_live_results():
             yield json.loads(line)
 
 # --- UI Sections ---
-def show_experiment_builder():
+def show_experiment_builder() -> None:
     """UI for building a new experiment configuration."""
     st.header("🛠️ Experiment Builder")
     st.write("Design a new experiment using the form below. The generated YAML will be used to launch the run.")
@@ -109,7 +110,7 @@ def show_experiment_builder():
             run_experiment_in_background(TEMP_CONFIG_PATH)
             st.rerun()
 
-def show_live_view():
+def show_live_view() -> None:
     """UI for monitoring a live experiment."""
     st.header("🚀 Live Experiment Monitor")
     if not st.session_state.get('is_running', False):
@@ -143,7 +144,7 @@ def show_live_view():
     st.session_state['is_running'] = False
     st.rerun() # Rerun to update the state
 
-def show_past_runs():
+def show_past_runs() -> None:
     """UI for browsing past experiment runs."""
     st.header("🗂️ Past Experiment Runs")
     past_runs = get_past_runs()

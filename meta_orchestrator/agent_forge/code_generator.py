@@ -7,7 +7,7 @@ class CodeGenerator:
     specification from the AgentDesigner.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.templates = {
             "Monolithic": self._get_monolithic_template,
             "Modular": self._get_modular_template,

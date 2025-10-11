@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import json
+from typing import Dict, Tuple, List, Any
 
 # --- Mock Environment and Variants ---
 
@@ -12,7 +13,7 @@ MOCK_VARIANTS = {
     "slow_expensive_best": {"success_rate": 0.95, "cost": 0.010, "autonomy": 0.9, "latency": 0.20},
 }
 
-def run_simulated_trial(variant_name: str):
+def run_simulated_trial(variant_name: str) -> Dict[str, Any]:
     """Simulates a single run of a variant, returning its performance."""
     if variant_name not in MOCK_VARIANTS:
         raise ValueError(f"Unknown variant: {variant_name}")
@@ -32,7 +33,7 @@ def run_simulated_trial(variant_name: str):
 
 # --- Adaptive Allocation Algorithms ---
 
-def simulate_epsilon_greedy(variants: list, budget: float, epsilon: float):
+def simulate_epsilon_greedy(variants: list, budget: float, epsilon: float) -> Tuple[List[str], Dict[str, List[int]]]:
     """Simulates the epsilon-greedy strategy."""
     print(f"\n--- Running Epsilon-Greedy (epsilon={epsilon}) ---")
 
@@ -62,7 +63,7 @@ def simulate_epsilon_greedy(variants: list, budget: float, epsilon: float):
 
     return choices, performance
 
-def simulate_thompson_sampling(variants: list, budget: float):
+def simulate_thompson_sampling(variants: list, budget: float) -> Tuple[List[str], Dict[str, List[int]]]:
     """Simulates the Thompson Sampling strategy using a Beta distribution."""
     print("\n--- Running Thompson Sampling ---")
 
@@ -103,7 +104,7 @@ if __name__ == "__main__":
     ts_choices, ts_perf = simulate_thompson_sampling(variant_names, budget=simulation_budget)
 
     # --- Analysis and Reporting ---
-    def print_summary(name, choices, performance):
+    def print_summary(name: str, choices: List[str], performance: Dict[str, List[int]]) -> None:
         print(f"\n--- {name} Summary ---")
         total_runs = len(choices)
         print(f"Total trials: {total_runs}")

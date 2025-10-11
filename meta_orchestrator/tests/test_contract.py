@@ -12,7 +12,7 @@ import meta_orchestrator.experiment_hub.variants
 
 class TestExperimentPipeline(unittest.TestCase):
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up a temporary test environment before each test."""
         self.test_config_path = "test_config_for_contract.yaml"
         self.test_results_dir = "temp_test_results"
@@ -47,14 +47,14 @@ class TestExperimentPipeline(unittest.TestCase):
         if os.path.exists(self.test_results_dir):
             shutil.rmtree(self.test_results_dir)
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """Clean up the temporary environment after each test."""
         if os.path.exists(self.test_config_path):
             os.remove(self.test_config_path)
         if os.path.exists(self.test_results_dir):
             shutil.rmtree(self.test_results_dir)
 
-    def test_full_experiment_run_contract(self):
+    def test_full_experiment_run_contract(self) -> None:
         """
         Tests the full, config-driven experiment pipeline from running to reporting.
         This acts as a contract test to ensure components work together correctly

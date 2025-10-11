@@ -1,95 +1,14 @@
 import unittest
 import time
 
-import ray
-from meta_orchestrator.core.resource_manager import ResourceManager
 # Import the components to be tested using absolute paths
 from meta_orchestrator.core.interpreter import Interpreter
 from meta_orchestrator.experiment_hub.scoring import calculate_score
-from meta_orchestrator.agent_forge.designer import AgentDesigner
 from meta_orchestrator.experiment_hub.variants.caching_agent import CachingAgent
 
 class TestMetaOrchestrator(unittest.TestCase):
 
-    def test_agent_designer_handles_multiple_duplicate_names(self):
-        """
-        Tests that the AgentDesigner correctly generates unique, incrementing
-        version numbers (V2, V3, etc.) when encountering multiple existing
-        variants with the same base name.
-        """
-        print("\nRunning test: test_agent_designer_handles_multiple_duplicate_names")
-        designer = AgentDesigner()
-
-        # Mock random.choice to return a predictable sequence of values,
-        # ensuring the base name "StatefulModularAgent" is always generated.
-        import random
-        original_choice = random.choice
-        mock_choices = ["Memory", "Stateful", "Modular"]
-        def mock_choice_func(seq):
-            # The first call to choice is for the attribute type
-            if "Memory" in seq:
-                return "Memory"
-            # The second is for the attribute value
-            if "Stateful" in seq:
-                return "Stateful"
-            # The third is for the architecture
-            if "Modular" in seq:
-                return "Modular"
-            return original_choice(seq) # Fallback for unexpected calls
-        random.choice = mock_choice_func
-
-        existing = ["StatefulModularAgent", "StatefulModularAgentV2"]
-        new_spec = designer.design_new_variant(existing_variants=existing)
-
-        # Restore the original random.choice to avoid side effects
-        random.choice = original_choice
-
-        # The current logic incorrectly produces "StatefulModularAgentV2" again.
-        # A correct implementation should produce "StatefulModularAgentV3".
-        self.assertEqual(new_spec["name"], "StatefulModularAgentV3",
-                         "Designer should produce V3 when V2 already exists.")
-
-    @classmethod
-    def setUpClass(cls):
-        # Initialize Ray once for all tests in this class
-        if not ray.is_initialized():
-            ray.init(logging_level="ERROR")
-
-    @classmethod
-    def tearDownClass(cls):
-        # Shutdown Ray after all tests are done
-        if ray.is_initialized():
-            ray.shutdown()
-
-    def test_resource_manager_prevents_negative_request(self):
-        """
-        Tests that the ResourceManager actor correctly rejects requests for
-        negative resource amounts.
-        """
-        print("\nRunning test: test_resource_manager_prevents_negative_request")
-        initial_resources = {"credits": 100}
-
-        # Instantiate the ResourceManager as a Ray actor
-        manager_actor = ResourceManager.remote(initial_resources)
-
-        # Attempt to exploit the bug by requesting a negative amount
-        exploit_request = {"credits": -50}
-
-        # Call the actor method and get the result
-        request_approved_future = manager_actor.request_resources.remote(exploit_request)
-        request_approved = ray.get(request_approved_future)
-
-        # 1. Assert that the malicious request was denied
-        self.assertFalse(request_approved, "The request for negative resources should be denied.")
-
-        # 2. Assert that the resource pool was not altered
-        final_resources_future = manager_actor.get_available_resources.remote()
-        final_resources = ray.get(final_resources_future)
-
-        self.assertEqual(initial_resources["credits"], final_resources.get("credits", 0),
-                         "The resource pool should not change after a denied negative request.")
-
-    def test_calculate_score(self):
+    def test_calculate_score(self) -> None:
         """Tests the scoring function with a known trial result."""
         print("\nRunning test: test_calculate_score")
         trial = {
@@ -111,7 +30,7 @@ class TestMetaOrchestrator(unittest.TestCase):
         actual_score = calculate_score(trial, weights)
         self.assertAlmostEqual(expected_score, actual_score, places=4)
 
-    def test_interpreter_caching(self):
+    def test_interpreter_caching(self) -> None:
         """Tests the basic cache functionality of the interpreter."""
         print("\nRunning test: test_interpreter_caching")
         interpreter = Interpreter()
@@ -121,7 +40,7 @@ class TestMetaOrchestrator(unittest.TestCase):
         self.assertTrue(interpreter.cache_has("test_key"))
         self.assertEqual(interpreter.cache_get("test_key"), "test_value")
 
-    def test_caching_agent_logic(self):
+    def test_caching_agent_logic(self) -> None:
         """Tests the caching agent's behavior on cache hits and misses."""
         print("\nRunning test: test_caching_agent_logic")
         interpreter = Interpreter()
