@@ -35,14 +35,21 @@ TUNABLE_VARIANT_REGISTRY: Dict[str, Type[AgentVariant]] = {
 
 
 class UnifiedOrchestrator:
-    """
-    A single, intelligent orchestrator that handles all experiment types
-    and execution backends based on the provided configuration.
+    """A single orchestrator for all experiment types and execution backends.
+
+    This class reads the experiment configuration and dispatches to the
+    appropriate sub-handler based on the specified orchestrator type (e.g.,
+    'standard', 'mab', 'gasi_run'). It also manages the execution backend
+    (e.g., 'local' or 'ray') and provides a real-time results bus for the
+    dashboard.
     """
 
     def __init__(self, config: Dict[str, Any], context: Dict[str, Any]):
-        """
-        Initializes the orchestrator with the full experiment configuration and a base context.
+        """Initializes the UnifiedOrchestrator.
+
+        Args:
+            config: The full experiment configuration dictionary.
+            context: The base context to be used for all trials.
         """
         self.config = config
         self.base_context = context
@@ -58,7 +65,14 @@ class UnifiedOrchestrator:
             os.remove(self.live_run_path)
 
     def _write_to_bus(self, result: Dict[str, Any]):
-        """Writes a single trial result to the live run bus."""
+        """Writes a single trial result to the live run bus.
+
+        This allows the Streamlit dashboard to tail the results of a live
+        experiment. It handles serialization of numpy types.
+
+        Args:
+            result: A dictionary representing the result of a single trial.
+        """
         if not self.live_run_path:
             return
 
@@ -78,9 +92,14 @@ class UnifiedOrchestrator:
             f.write(json.dumps(serializable_result) + "\n")
 
     def run_suite(self) -> Generator[Dict[str, Any], None, None]:
-        """
-        Runs the full experiment suite, dispatching to the appropriate
-        handler based on the orchestrator type.
+        """Runs the full experiment suite.
+
+        This is the main entry point for the orchestrator. It reads the
+        `orchestrator.type` from the config and dispatches the execution to
+        the corresponding `_run_*` method.
+
+        Yields:
+            A dictionary for each trial result as it becomes available.
         """
         orchestrator_type = self.orchestrator_config.get('type', 'standard')
 
@@ -103,6 +122,14 @@ class UnifiedOrchestrator:
 
     # --- Standard Orchestration Logic ---
     def _run_standard(self) -> Generator[Dict[str, Any], None, None]:
+        """Runs a standard, parallel set of experiments.
+
+        Executes a predefined number of trials for a specified list of agent
+        variants. It supports both 'local' and 'ray' execution backends.
+
+        Yields:
+            A dictionary for each trial result.
+        """
         experiments = self.orchestrator_config.get('standard_settings', {}).get('experiments', [])
         for experiment in experiments:
             if not experiment.get("enabled", False): continue
@@ -142,6 +169,14 @@ class UnifiedOrchestrator:
 
     # --- Multi-Armed Bandit Logic ---
     def _run_mab(self) -> Generator[Dict[str, Any], None, None]:
+        """Runs a Multi-Armed Bandit (MAB) experiment.
+
+        Dynamically allocates trials to the best-performing agent variants
+        over time based on the chosen MAB strategy (e.g., 'thompson_sampling').
+
+        Yields:
+            A dictionary for each trial result.
+        """
         settings = self.orchestrator_config.get('mab_settings', {})
         strategy = settings.get('strategy', 'thompson_sampling')
         variants = settings.get('variants', [])
@@ -170,6 +205,17 @@ class UnifiedOrchestrator:
             yield trial_result
 
     def _select_mab_variant(self, variants: List[str], performance: Dict, strategy: str) -> str:
+        """Selects the next variant to run in a MAB experiment.
+
+        Args:
+            variants: The list of variant names to choose from.
+            performance: A dictionary tracking the performance of each variant.
+            strategy: The MAB strategy to use ('epsilon_greedy' or
+                      'thompson_sampling').
+
+        Returns:
+            The name of the chosen variant.
+        """
         if strategy == "epsilon_greedy":
             if random.random() < self.orchestrator_config['mab_settings'].get('epsilon', 0.1): return random.choice(variants)
             avg_scores = {v: (p["score_sum"] / p["runs"]) if p["runs"] > 0 else 0 for v, p in performance.items()}
@@ -179,6 +225,14 @@ class UnifiedOrchestrator:
             return max(samples, key=samples.get)
 
     def _update_mab_performance(self, variant: str, score: float, performance: Dict, strategy: str):
+        """Updates the performance dictionary for a variant after a MAB trial.
+
+        Args:
+            variant: The name of the variant that was run.
+            score: The score achieved by the variant in the trial.
+            performance: The dictionary tracking performance metrics.
+            strategy: The MAB strategy being used.
+        """
         if strategy == "epsilon_greedy":
             performance[variant]["score_sum"] += score
             performance[variant]["runs"] += 1
@@ -192,6 +246,14 @@ class UnifiedOrchestrator:
 
     # --- Bayesian Optimization Logic ---
     def _run_bayesian_optimization(self) -> Generator[Dict[str, Any], None, None]:
+        """Runs a Bayesian Optimization experiment for hyperparameter tuning.
+
+        Uses a Gaussian Process model to intelligently search a parameter
+        space for a tunable agent variant to find the optimal configuration.
+
+        Yields:
+            A dictionary for each trial result.
+        """
         if not Optimizer: raise ImportError("scikit-optimize is required for Bayesian Optimization.")
 
         settings = self.orchestrator_config.get('tuning_settings', {})
@@ -249,6 +311,15 @@ class UnifiedOrchestrator:
 
     # --- Adversarial Benchmark Logic ---
     def _run_adversarial_benchmark(self) -> Generator[Dict[str, Any], None, None]:
+        """Runs an adversarial benchmark.
+
+        First, it runs an "adversary" agent to generate a challenging or
+        "poisoned" context. Then, it runs one or more "target" agents
+        within that same context to measure their robustness.
+
+        Yields:
+            A dictionary for each trial result of the target agents.
+        """
         settings = self.orchestrator_config.get('adversarial_settings', {})
         adversary_variant = settings.get('adversary_variant')
         target_variants = settings.get('target_variants')
@@ -275,6 +346,21 @@ class UnifiedOrchestrator:
 
     # --- Generative Adversarial Self-Improvement (GASI) Logic ---
     def _run_gasi(self) -> Generator[Dict[str, Any], None, None]:
+        """Runs the full Generative Adversarial Self-Improvement (GASI) loop.
+
+        This complex orchestration mode involves multiple phases per generation:
+        1.  **Generation**: A new "challenger" agent is forged.
+        2.  **Evaluation**: The challenger is benchmarked against the current
+            champion. The winner becomes the new champion.
+        3.  **Adversarial**: A new "adversary" agent is forged to target the
+            new champion.
+        4.  **Hardening**: The champion is tested against the new adversary.
+        5.  **Self-Correction**: If the champion fails hardening, the system
+            attempts to generate a code patch to "heal" it.
+
+        Yields:
+            A dictionary for each trial result across all phases.
+        """
         print("\n--- INITIATING GENERATIVE ADVERSARIAL SELF-IMPROVEMENT RUN ---")
         settings = self.orchestrator_config.get('gasi_settings', {})
         num_generations = settings.get('generations', 3)
@@ -446,7 +532,16 @@ class UnifiedOrchestrator:
         print("\n--- GASI Run Concluded ---")
 
     def _run_standard_internal(self, variants, config) -> Generator[Dict[str, Any], None, None]:
-        """Internal helper to run a standard experiment, used by GASI."""
+        """Internal helper to run a standard experiment, used by GASI.
+
+        Args:
+            variants: A list of variant names to run.
+            config: A dictionary with configuration for the run, like
+                    'trials_per_variant'.
+
+        Yields:
+            A dictionary for each trial result.
+        """
         # This is a simplified version of the main _run_standard method for internal use
         trials_per_variant = config['trials_per_variant']
         exp_context = self.base_context.copy()

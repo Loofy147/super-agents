@@ -23,7 +23,12 @@ st.set_page_config(
 # --- Helper Functions ---
 @st.cache_data
 def get_past_runs() -> List[str]:
-    """Scans the results directory for past experiment runs."""
+    """Scans the results directory for past experiment runs.
+
+    Returns:
+        A sorted list of directory names for past runs, with the most
+        recent first.
+    """
     if not os.path.exists(RESULTS_DIR):
         return []
     run_dirs = [d for d in os.listdir(RESULTS_DIR) if d.startswith("run_") and os.path.isdir(os.path.join(RESULTS_DIR, d))]
@@ -31,7 +36,14 @@ def get_past_runs() -> List[str]:
     return run_dirs
 
 def run_experiment_in_background(config_path: str) -> None:
-    """Launches the CLI experiment runner as a non-blocking background process."""
+    """Launches the CLI experiment runner as a background process.
+
+    This function is non-blocking. It starts the experiment and stores the
+    process object in the Streamlit session state to monitor its status.
+
+    Args:
+        config_path: The path to the experiment configuration YAML file.
+    """
     command = [sys.executable, "-m", "meta_orchestrator.cli", "run", "-c", config_path]
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     st.session_state['experiment_process'] = process
@@ -41,7 +53,15 @@ def run_experiment_in_background(config_path: str) -> None:
         os.remove(LIVE_RUN_FILE)
 
 def tail_live_results() -> Generator[Dict[str, Any], None, None]:
-    """A generator that tails the live run file and yields new results."""
+    """Tails the live run file and yields new results as they are written.
+
+    This function acts as a generator, continuously reading new lines from
+    the `live_run.jsonl` file as long as an experiment is marked as
+    running in the session state.
+
+    Yields:
+        A dictionary representing a single trial result from the live run.
+    """
     if not os.path.exists(LIVE_RUN_FILE):
         return
     with open(LIVE_RUN_FILE, 'r') as f:
@@ -58,7 +78,13 @@ def tail_live_results() -> Generator[Dict[str, Any], None, None]:
 
 # --- UI Sections ---
 def show_experiment_builder() -> None:
-    """UI for building a new experiment configuration."""
+    """Renders the Streamlit UI for building a new experiment.
+
+    This function displays a form that allows users to select an orchestrator
+    type, choose agent variants, set trial counts, and adjust scoring
+    weights. Submitting the form generates a temporary config file and
+    launches the experiment.
+    """
     st.header("🛠️ Experiment Builder")
     st.write("Design a new experiment using the form below. The generated YAML will be used to launch the run.")
 
@@ -111,7 +137,12 @@ def show_experiment_builder() -> None:
             st.rerun()
 
 def show_live_view() -> None:
-    """UI for monitoring a live experiment."""
+    """Renders the Streamlit UI for monitoring a live experiment.
+
+    This function tails the live results file, updating charts in real-time
+    to show agent performance as the experiment progresses. It displays final
+    results and a success message upon completion.
+    """
     st.header("🚀 Live Experiment Monitor")
     if not st.session_state.get('is_running', False):
         st.info("No experiment is currently running. Launch one from the 'Experiment Builder'.")
@@ -145,7 +176,12 @@ def show_live_view() -> None:
     st.rerun() # Rerun to update the state
 
 def show_past_runs() -> None:
-    """UI for browsing past experiment runs."""
+    """Renders the Streamlit UI for browsing past experiment runs.
+
+    This function provides a dropdown to select a past run. Once a run is
+    chosen, it displays the Markdown summary report and a dataframe of the
+    raw trial data from that experiment.
+    """
     st.header("🗂️ Past Experiment Runs")
     past_runs = get_past_runs()
     if not past_runs:

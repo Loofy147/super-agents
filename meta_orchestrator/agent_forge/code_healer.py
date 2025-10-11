@@ -9,14 +9,20 @@ except ImportError:
 
 
 class CodeHealer:
-    """
-    Analyzes a failing agent's code and the context of its failure,
-    then uses an LLM to generate a potential code patch to "heal" the flaw.
+    """Analyzes and patches failing agent code using an LLM.
+
+    This class takes the source code of a failing agent and a failure
+    analysis, then attempts to generate a code patch to correct the
+    identified flaw. It is designed to work with an external LLM like OpenAI.
     """
 
     def __init__(self, openai_api_key: str = None) -> None:
-        """
-        Initializes the CodeHealer, optionally with an OpenAI API key.
+        """Initializes the CodeHealer.
+
+        Args:
+            openai_api_key: The OpenAI API key. If not provided, it will
+                            attempt to use the OPENAI_API_KEY environment
+                            variable.
         """
         if OpenAI:
             self.client = OpenAI(api_key=openai_api_key or os.environ.get("OPENAI_API_KEY"))
@@ -24,8 +30,11 @@ class CodeHealer:
             self.client = None
 
     def generate_patch(self, source_code: str, failure_analysis: Dict[str, Any]) -> str:
-        """
-        Generates a code patch to fix a flaw identified in the failure analysis.
+        """Generates a code patch to fix a flaw.
+
+        This method uses a placeholder implementation to simulate an LLM call.
+        Based on the failure analysis, it selects a mock patch to apply to
+        the source code.
 
         Args:
             source_code: The full source code of the failing agent.
@@ -51,9 +60,16 @@ class CodeHealer:
         return source_code
 
     def _get_mock_ambiguity_patch(self, original_code: str) -> str:
-        """
-        A placeholder that returns a hardcoded patch for ambiguity vulnerabilities.
-        This simulates an LLM response.
+        """Returns a hardcoded patch for ambiguity vulnerabilities.
+
+        This is a placeholder method to simulate an LLM's response for a
+        specific type of code flaw.
+
+        Args:
+            original_code: The original source code of the agent.
+
+        Returns:
+            The patched source code.
         """
         # This mock patch adds a simple check for conflicting keywords.
         patch = """
