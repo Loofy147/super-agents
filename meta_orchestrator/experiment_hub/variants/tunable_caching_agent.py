@@ -2,9 +2,9 @@ import time
 from typing import Dict, Any
 from collections import OrderedDict
 
-from ...core.base_variant import AgentVariant
-from ...core.interpreter import Interpreter
-from ..registry import register
+from meta_orchestrator.core.base_variant import AgentVariant
+from meta_orchestrator.core.interpreter import Interpreter
+from meta_orchestrator.experiment_hub.registry import register
 
 # Note: We don't register this class directly, as the orchestrator
 # will be responsible for instantiating it with specific parameters.

@@ -1,7 +1,7 @@
 import time
 from typing import Dict, Any
-from ..registry import register
-from ...core.base_variant import AgentVariant
+from meta_orchestrator.experiment_hub.registry import register
+from meta_orchestrator.core.base_variant import AgentVariant
 
 class InMemoryProbe(AgentVariant):
     """A simple, fast, in-memory agent simulation."""
