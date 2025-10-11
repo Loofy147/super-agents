@@ -15,8 +15,18 @@ from .agent_forge.designer import AgentDesigner
 from .agent_forge.code_generator import CodeGenerator
 
 def main() -> None:
-    """
-    The main entry point for the Meta-Orchestrator command-line interface.
+    """The main entry point for the Meta-Orchestrator CLI.
+
+    This function parses command-line arguments and dispatches to the
+    appropriate handler function based on the specified command.
+    Commands include:
+    - run: Executes an experiment suite from a config file.
+    - dashboard: Launches the Streamlit dashboard.
+    - suggest-next-run: Analyzes a past run to suggest a new one.
+    - analyze: Provides rule-based modernization suggestions for a file.
+    - suggest-refactor: Uses an LLM to suggest refactorings.
+    - scaffold-tests: Generates a boilerplate test file for an agent.
+    - forge-agent: Autonomously designs and generates a new agent.
     """
     parser = argparse.ArgumentParser(
         description="A self-improving agent system for automated AI experimentation and optimization."
@@ -152,7 +162,13 @@ def main() -> None:
 
 
 def handle_forge_agent() -> None:
-    """Logic for the 'forge-agent' command."""
+    """Handles the 'forge-agent' command.
+
+    This function orchestrates the process of designing a new agent variant
+    using AgentDesigner, generating its source code via CodeGenerator, and
+    writing the resulting file to the appropriate directory, making it
+    available for future experiments.
+    """
     designer = AgentDesigner()
     code_generator = CodeGenerator()
 
@@ -171,7 +187,14 @@ def handle_forge_agent() -> None:
 
 
 def handle_suggest_next_run(run_dir: str) -> None:
-    """Logic for the 'suggest-next-run' command."""
+    """Handles the 'suggest-next-run' command.
+
+    Analyzes the results of a completed experiment run and suggests a
+    follow-up experiment by generating a new configuration file.
+
+    Args:
+        run_dir: The path to the completed experiment run directory.
+    """
     print(f"Analyzing run directory: {run_dir}")
 
     # Define paths to the necessary files

@@ -1,30 +1,51 @@
 import time
 
 class Interpreter:
-    """
-    A mock interpreter for a lightweight language (e.g., L0).
+    """A mock interpreter for a lightweight language.
 
-    This class simulates the core components needed for the Meta-Orchestrator,
-    including a cache, JIT compilation markers, and timing functions.
+    This class simulates the core components needed for agents to perform
+    tasks, including a cache, Just-In-Time (JIT) compilation markers,
+    and timing functions. It provides a set of primitives that agents can
+    interact with.
     """
     def __init__(self):
+        """Initializes the Interpreter with an empty cache and JIT set."""
         self._cache = {}
         self._jit_seen = set()
         print("Interpreter initialized.")
 
     # Primitive: Caching
     def cache_put(self, key, value):
-        """Stores a value in the cache."""
+        """Stores a value in the cache.
+
+        Args:
+            key: The key to store the value under.
+            value: The value to be stored.
+        """
         print(f"CACHE PUT: key='{key}'")
         self._cache[key] = value
 
     def cache_get(self, key):
-        """Retrieves a value from the cache. Returns None if not found."""
+        """Retrieves a value from the cache.
+
+        Args:
+            key: The key of the value to retrieve.
+
+        Returns:
+            The cached value, or None if the key is not found.
+        """
         print(f"CACHE GET: key='{key}'")
         return self._cache.get(key)
 
     def cache_has(self, key):
-        """Checks if a key exists in the cache."""
+        """Checks if a key exists in the cache.
+
+        Args:
+            key: The key to check for.
+
+        Returns:
+            True if the key exists, False otherwise.
+        """
         return key in self._cache
 
     # Primitive: Timing
@@ -34,16 +55,37 @@ class Interpreter:
 
     # Primitive: JIT Compilation Markers
     def jit_mark_seen(self, item):
-        """Marks an item (e.g., a function or code block) as 'seen' for JIT compilation."""
+        """Marks an item as 'seen' for JIT compilation simulation.
+
+        Args:
+            item: The item (e.g., a function name) to mark as seen.
+        """
         print(f"JIT MARK SEEN: item='{item}'")
         self._jit_seen.add(item)
 
     def jit_seen(self, item):
-        """Checks if an item has been marked as 'seen' for JIT."""
+        """Checks if an item has been marked as 'seen' for JIT.
+
+        Args:
+            item: The item to check.
+
+        Returns:
+            True if the item has been seen, False otherwise.
+        """
         return item in self._jit_seen
 
     def simulate_jit_compile(self, item):
-        """Simulates the JIT compilation process for an item."""
+        """Simulates the JIT compilation process for an item.
+
+        If the item has not been seen before, this method introduces a delay
+        to simulate compilation time.
+
+        Args:
+            item: The item to be "compiled".
+
+        Returns:
+            'COMPILED' if it was the first time, 'CACHED' otherwise.
+        """
         if not self.jit_seen(item):
             print(f"JIT COMPILE: Simulating compilation for '{item}'...")
             time.sleep(0.05)  # Simulate compilation delay
@@ -54,10 +96,16 @@ class Interpreter:
             return "CACHED"
 
     def eval(self, ast_or_code):
-        """
-        A mock evaluation function.
-        In a real scenario, this would interpret or execute code.
-        Here, it just prints the code it receives.
+        """A mock evaluation function.
+
+        In a real scenario, this would interpret or execute code. Here, it
+        just prints the code it receives and returns a mock success value.
+
+        Args:
+            ast_or_code: The code or AST to be "executed".
+
+        Returns:
+            A dictionary indicating mock success.
         """
         print(f"EVAL: Executing code -> {ast_or_code}")
         # This is where the logic to interact with primitives would go.

@@ -2,12 +2,14 @@ import random
 from typing import Dict, Any, List
 
 class AgentDesigner:
-    """
-    Designs novel agent variant specifications by combining core attributes
-    and architectural patterns from a predefined innovation matrix.
+    """Designs novel agent variant specifications.
+
+    Combines core attributes and architectural patterns from a predefined
+    innovation matrix to generate diverse agent designs.
     """
 
     def __init__(self) -> None:
+        """Initializes the AgentDesigner with a matrix of design components."""
         self.attributes = {
             "Memory": ["Stateless", "Stateful", "Short-Term", "Long-Term"],
             "Planning": ["Reactive", "Goal-Oriented", "Hierarchical"],
@@ -16,8 +18,10 @@ class AgentDesigner:
         self.architectures = ["Monolithic", "Modular", "StateMachine", "MultiAgentSystem"]
 
     def design_new_variant(self, existing_variants: List[str] = None) -> Dict[str, Any]:
-        """
-        Generates a specification for a new, potentially novel agent variant.
+        """Generates a specification for a new, potentially novel agent variant.
+
+        This method combines attributes and architectures to create a design
+        blueprint. It can also ensure the generated agent name is unique.
 
         Args:
             existing_variants: An optional list of existing variant names to
@@ -67,15 +71,19 @@ class AgentDesigner:
         return design_spec
 
     def design_adversarial_variant(self, target_profile: Dict[str, Any] = None) -> Dict[str, Any]:
-        """
-        Designs an adversarial agent variant specifically to challenge another agent.
+        """Designs an adversarial agent variant to challenge another agent.
+
+        This method selects from a list of predefined adversarial strategies
+        to create an agent designed to probe for specific weaknesses.
 
         Args:
-            target_profile: A dictionary containing information about the target agent,
-                            which could be used to select a tailored attack vector.
+            target_profile: A dictionary containing information about the target
+                            agent, which could be used to select a tailored
+                            attack vector. (Currently unused).
 
         Returns:
-            A dictionary representing the design blueprint of the new adversarial agent.
+            A dictionary representing the design blueprint of the new
+            adversarial agent.
         """
         print("--- Agent Forge: Designing new ADVERSARIAL agent ---")
 
