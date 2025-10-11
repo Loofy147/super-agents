@@ -3,7 +3,7 @@ from meta_orchestrator.experiment_hub.variants.in_memory import InMemoryProbe, S
 
 class TestInMemoryVariants(unittest.TestCase):
 
-    def test_in_memory_probe(self):
+    def test_in_memory_probe(self) -> None:
         """
         Tests the specific return values of the InMemoryProbe variant.
         """
@@ -23,7 +23,7 @@ class TestInMemoryVariants(unittest.TestCase):
         self.assertEqual(result["cost"], 0.001)
         self.assertEqual(result["autonomy"], 0.8)
 
-    def test_slower_reliable_probe(self):
+    def test_slower_reliable_probe(self) -> None:
         """
         Tests the specific return values of the SlowerReliableProbe variant.
         """

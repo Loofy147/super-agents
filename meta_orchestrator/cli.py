@@ -14,7 +14,7 @@ from .analysis.config_generator import ConfigGenerator
 from .agent_forge.designer import AgentDesigner
 from .agent_forge.code_generator import CodeGenerator
 
-def main():
+def main() -> None:
     """
     The main entry point for the Meta-Orchestrator command-line interface.
     """
@@ -151,7 +151,7 @@ def main():
         handle_forge_agent()
 
 
-def handle_forge_agent():
+def handle_forge_agent() -> None:
     """Logic for the 'forge-agent' command."""
     designer = AgentDesigner()
     code_generator = CodeGenerator()
@@ -170,7 +170,7 @@ def handle_forge_agent():
     print("   It is now available to be used in experiments.")
 
 
-def handle_suggest_next_run(run_dir: str):
+def handle_suggest_next_run(run_dir: str) -> None:
     """Logic for the 'suggest-next-run' command."""
     print(f"Analyzing run directory: {run_dir}")
 

@@ -1,5 +1,4 @@
 import random
-import json
 from typing import Dict, Any, List
 
 class AgentDesigner:
@@ -8,7 +7,7 @@ class AgentDesigner:
     and architectural patterns from a predefined innovation matrix.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.attributes = {
             "Memory": ["Stateless", "Stateful", "Short-Term", "Long-Term"],
             "Planning": ["Reactive", "Goal-Oriented", "Hierarchical"],
@@ -41,15 +40,13 @@ class AgentDesigner:
         # Generate a name for the new variant
         variant_name = f"{sanitized_attribute}{chosen_architecture}Agent"
 
-        # --- FIX START ---
-        # Ensure the generated name is unique by incrementing a version suffix.
+        # Ensure the generated name is unique
         if existing_variants:
             base_name = variant_name
             version = 2
             while variant_name in existing_variants:
                 variant_name = f"{base_name}V{version}"
                 version += 1
-        # --- FIX END ---
 
         design_spec = {
             "name": variant_name,
@@ -130,6 +127,7 @@ class AgentDesigner:
 
 # Example Usage
 if __name__ == '__main__':
+    import json
     designer = AgentDesigner()
 
     print("\n--- Designing a Standard Agent ---")

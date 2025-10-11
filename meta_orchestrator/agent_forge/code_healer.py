@@ -14,7 +14,7 @@ class CodeHealer:
     then uses an LLM to generate a potential code patch to "heal" the flaw.
     """
 
-    def __init__(self, openai_api_key: str = None):
+    def __init__(self, openai_api_key: str = None) -> None:
         """
         Initializes the CodeHealer, optionally with an OpenAI API key.
         """

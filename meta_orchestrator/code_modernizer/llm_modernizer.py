@@ -6,7 +6,7 @@ class LLMModernizer:
     """
     Uses an LLM to suggest refactorings and modernizations for Python code.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
             raise ValueError("OPENAI_API_KEY environment variable not set. Please set it to use this feature.")

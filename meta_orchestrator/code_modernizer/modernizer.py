@@ -5,7 +5,7 @@ class CodeModernizer:
     """
     A class to analyze Python source code and suggest modernizations.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         self.suggestions = []
 
     def analyze_and_suggest(self, filepath: str) -> List[Dict[str, Any]]:
@@ -29,14 +29,14 @@ class CodeModernizer:
         print(f"Analysis complete for {filepath}. Found {len(self.suggestions)} suggestions.")
         return self.suggestions
 
-    def _add_suggestion(self, line: int, suggestion_type: str, message: str):
+    def _add_suggestion(self, line: int, suggestion_type: str, message: str) -> None:
         self.suggestions.append({
             "line": line,
             "type": suggestion_type,
             "message": message
         })
 
-    def _check_for_fstrings(self, tree: ast.AST):
+    def _check_for_fstrings(self, tree: ast.AST) -> None:
         """
         Walks the AST to find uses of .format() or % formatting that could be f-strings.
         """
@@ -55,7 +55,7 @@ class CodeModernizer:
                     "Consider replacing %-style formatting with an f-string."
                 )
 
-    def _check_for_type_hints(self, tree: ast.AST):
+    def _check_for_type_hints(self, tree: ast.AST) -> None:
         """
         Walks the AST to find function definitions that are missing type hints.
         """
